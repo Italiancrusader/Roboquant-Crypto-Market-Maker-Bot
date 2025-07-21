@@ -6,19 +6,24 @@
     <title>Market Maker Bot - Setup Guide</title>
     <style>
         :root {
-            --primary-bg: #0a0a0a;
-            --secondary-bg: #1a1a1a;
-            --card-bg: #141414;
-            --primary-blue: #0080ff;
-            --secondary-blue: #0056b3;
-            --light-blue: #4da6ff;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --border-color: #2a2a2a;
-            --code-bg: #0d1117;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --primary-blue: #0066ff;
+            --secondary-blue: #0052cc;
+            --light-blue: #e6f0ff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --code-bg: #f5f5f5;
+            --code-text: #0066ff;
+            --success: #00a854;
+            --warning: #faad14;
+            --danger: #ff4d4f;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --nav-bg: #000000;
+            --nav-text: #ffffff;
+            --nav-hover: #0066ff;
         }
 
         * {
@@ -37,25 +42,45 @@
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--card-bg) 100%);
+            background: #000000;
+            color: white;
             padding: 2rem 0;
             text-align: center;
-            border-bottom: 2px solid var(--primary-blue);
+            border-bottom: 3px solid var(--primary-blue);
             position: sticky;
             top: 0;
             z-index: 1000;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px var(--shadow);
         }
 
-        .header h1 {
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            filter: brightness(0) invert(1);
+        }
+
+        .header-text h1 {
             font-size: 2.5rem;
-            color: var(--primary-blue);
+            font-weight: 700;
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 20px rgba(0, 128, 255, 0.5);
+            background: linear-gradient(45deg, #ffffff, var(--primary-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .header p {
-            color: var(--text-secondary);
+        .header-text p {
+            color: #cccccc;
             font-size: 1.1rem;
         }
 
@@ -63,10 +88,10 @@
         .nav-container {
             position: fixed;
             left: 0;
-            top: 120px;
-            width: 250px;
-            height: calc(100vh - 120px);
-            background-color: var(--secondary-bg);
+            top: 140px;
+            width: 280px;
+            height: calc(100vh - 140px);
+            background-color: var(--nav-bg);
             border-right: 1px solid var(--border-color);
             overflow-y: auto;
             padding: 2rem 0;
@@ -80,44 +105,46 @@
 
         .nav-section h3 {
             color: var(--primary-blue);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            margin-bottom: 0.5rem;
-            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
         .nav-link {
             display: block;
-            color: var(--text-secondary);
+            color: #cccccc;
             text-decoration: none;
-            padding: 0.5rem 0;
+            padding: 0.75rem 1rem;
             transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            padding-left: 1rem;
-            margin-left: -1rem;
+            border-radius: 6px;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
         }
 
         .nav-link:hover {
-            color: var(--primary-blue);
-            border-left-color: var(--primary-blue);
-            background-color: rgba(0, 128, 255, 0.1);
+            color: white;
+            background-color: rgba(0, 102, 255, 0.1);
+            transform: translateX(5px);
         }
 
         .nav-link.active {
-            color: var(--primary-blue);
-            border-left-color: var(--primary-blue);
-            background-color: rgba(0, 128, 255, 0.1);
+            color: white;
+            background-color: var(--primary-blue);
+            font-weight: 500;
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 250px;
-            padding: 2rem 3rem;
+            margin-left: 280px;
+            padding: 3rem 4rem;
             max-width: 1200px;
+            background-color: var(--primary-bg);
         }
 
         .section {
-            margin-bottom: 4rem;
+            margin-bottom: 5rem;
             opacity: 0;
             transform: translateY(20px);
             animation: fadeIn 0.6s ease forwards;
@@ -131,137 +158,171 @@
         }
 
         .section h2 {
-            color: var(--primary-blue);
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-blue);
+            color: var(--text-primary);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary-blue);
+            border-radius: 2px;
         }
 
         .section h3 {
-            color: var(--light-blue);
-            font-size: 1.5rem;
-            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            margin: 2.5rem 0 1.5rem 0;
+            font-weight: 600;
         }
 
         .section h4 {
             color: var(--text-primary);
-            font-size: 1.2rem;
-            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+            margin: 2rem 0 1rem 0;
+            font-weight: 600;
         }
 
         /* Cards */
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 102, 255, 0.1);
             border-color: var(--primary-blue);
-            box-shadow: 0 0 20px rgba(0, 128, 255, 0.2);
+            transform: translateY(-2px);
         }
 
         /* Code Blocks */
         pre {
             background-color: var(--code-bg);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 1rem;
+            border-radius: 8px;
+            padding: 1.5rem;
             overflow-x: auto;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
             position: relative;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         code {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
             font-size: 0.9rem;
-            color: var(--light-blue);
-        }
-
-        .code-header {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background-color: var(--primary-blue);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0 6px 0 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
+            color: var(--code-text);
         }
 
         /* Lists */
         ul, ol {
-            margin: 1rem 0;
+            margin: 1.5rem 0;
             padding-left: 2rem;
         }
 
         li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             color: var(--text-secondary);
+            line-height: 1.8;
         }
 
         /* Alerts */
         .alert {
-            padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
+            padding: 1.25rem 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
             border: 1px solid;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert::before {
+            font-size: 1.25rem;
         }
 
         .alert-info {
-            background-color: rgba(0, 128, 255, 0.1);
+            background-color: #e6f0ff;
             border-color: var(--primary-blue);
-            color: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        .alert-info::before {
+            content: "ℹ️";
         }
 
         .alert-warning {
-            background-color: rgba(255, 193, 7, 0.1);
+            background-color: #fffbe6;
             border-color: var(--warning);
-            color: var(--warning);
+            color: #ad6800;
+        }
+
+        .alert-warning::before {
+            content: "⚠️";
         }
 
         .alert-danger {
-            background-color: rgba(220, 53, 69, 0.1);
+            background-color: #fff1f0;
             border-color: var(--danger);
-            color: var(--danger);
+            color: #cf1322;
+        }
+
+        .alert-danger::before {
+            content: "⛔";
         }
 
         .alert-success {
-            background-color: rgba(40, 167, 69, 0.1);
+            background-color: #f0f9ff;
             border-color: var(--success);
-            color: var(--success);
+            color: #00742a;
+        }
+
+        .alert-success::before {
+            content: "✅";
         }
 
         /* Buttons */
         .btn {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 2rem;
             background-color: var(--primary-blue);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
             font-size: 1rem;
+            font-weight: 600;
             margin: 0.5rem 0.5rem 0.5rem 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 255, 0.2);
         }
 
         .btn:hover {
             background-color: var(--secondary-blue);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 128, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 102, 255, 0.3);
         }
 
         .btn-secondary {
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--primary-blue);
+            background-color: white;
+            border: 2px solid var(--primary-blue);
             color: var(--primary-blue);
+            box-shadow: none;
         }
 
         .btn-secondary:hover {
@@ -273,44 +334,57 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         th, td {
-            padding: 0.75rem;
+            padding: 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
 
         th {
-            background-color: var(--secondary-bg);
-            color: var(--primary-blue);
+            background-color: #f8f9fa;
+            color: var(--text-primary);
             font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         tr:hover {
-            background-color: rgba(0, 128, 255, 0.05);
+            background-color: #f8f9fa;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         /* Mobile Menu Toggle */
         .menu-toggle {
             display: none;
             position: fixed;
-            top: 130px;
+            top: 150px;
             left: 20px;
             z-index: 1001;
             background-color: var(--primary-blue);
             color: white;
             border: none;
-            padding: 0.5rem;
-            border-radius: 4px;
+            padding: 0.75rem;
+            border-radius: 8px;
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .nav-container {
                 transform: translateX(-100%);
+                box-shadow: 2px 0 10px var(--shadow);
             }
 
             .nav-container.active {
@@ -319,25 +393,30 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 1rem;
+                padding: 2rem 1.5rem;
             }
 
             .menu-toggle {
                 display: block;
             }
 
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
             .header h1 {
                 font-size: 1.8rem;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
             }
         }
 
         /* Print Styles */
         @media print {
-            body {
-                background: white;
-                color: black;
-            }
-
             .nav-container, .menu-toggle {
                 display: none;
             }
@@ -346,14 +425,9 @@
                 margin-left: 0;
             }
 
-            .card {
-                border: 1px solid #ddd;
-                break-inside: avoid;
-            }
-
-            pre {
-                background-color: #f5f5f5;
-                border: 1px solid #ddd;
+            .header {
+                position: relative;
+                box-shadow: none;
             }
         }
 
@@ -365,17 +439,18 @@
         /* Copy Button */
         .copy-btn {
             position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
+            top: 0.75rem;
+            right: 0.75rem;
             background-color: var(--primary-blue);
             color: white;
             border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         pre:hover .copy-btn {
@@ -384,36 +459,183 @@
 
         .copy-btn:hover {
             background-color: var(--secondary-blue);
+            transform: scale(1.05);
         }
 
-        /* Exchange Logos */
+        /* Exchange Grid */
         .exchange-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 1rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
 
         .exchange-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
+            background-color: white;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
             text-align: center;
             transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .exchange-card:hover {
             border-color: var(--primary-blue);
             transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 102, 255, 0.15);
+            color: var(--primary-blue);
+        }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 102, 255, 0.1);
+            border-color: var(--primary-blue);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Progress Steps */
+        .steps {
+            margin: 2rem 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Syntax Highlighting */
+        .keyword {
+            color: #0066ff;
+            font-weight: 600;
+        }
+
+        .string {
+            color: #00a854;
+        }
+
+        .comment {
+            color: #999999;
+            font-style: italic;
+        }
+
+        /* Scroll to Top Button */
+        .scroll-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--primary-blue);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 102, 255, 0.3);
+            border: none;
+            font-size: 1.25rem;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+        }
+
+        .scroll-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
         }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <h1>Universal Market Maker Bot</h1>
-        <p>Complete Setup & Installation Guide</p>
+        <div class="header-content">
+            <img src="Asset 3.svg" alt="Logo" class="logo">
+            <div class="header-text">
+                <h1>Universal Market Maker Bot</h1>
+                <p>Complete Setup & Installation Guide</p>
+            </div>
+        </div>
     </header>
 
     <!-- Mobile Menu Toggle -->
@@ -423,6 +645,7 @@
     <nav class="nav-container" id="navContainer">
         <div class="nav-section">
             <h3>Getting Started</h3>
+            <a href="#overview" class="nav-link">Overview</a>
             <a href="#prerequisites" class="nav-link">Prerequisites</a>
             <a href="#supported-exchanges" class="nav-link">Supported Exchanges</a>
         </div>
@@ -460,16 +683,46 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Overview Section -->
+        <section id="overview" class="section">
+            <h2>Overview</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">Automated Trading</div>
+                    <div class="feature-description">Professional market making bot using the Avellaneda-Stoikov strategy for optimal quote placement</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <div class="feature-title">Multi-Exchange Support</div>
+                    <div class="feature-description">Works with 11+ major cryptocurrency exchanges including Binance, Bybit, OKX, and more</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Easy Setup</div>
+                    <div class="feature-description">Simple configuration wizard and one-click launchers for Windows, Mac, and Linux</div>
+                </div>
+            </div>
+        </section>
+
         <!-- Prerequisites Section -->
         <section id="prerequisites" class="section">
             <h2>Prerequisites</h2>
             <div class="card">
-                <h4>Required:</h4>
+                <h4>System Requirements</h4>
                 <ul>
                     <li>Python 3.8 or higher</li>
-                    <li>Exchange account with API access</li>
-                    <li>Some USDT/USD in your exchange account</li>
-                    <li>Basic computer skills (ability to use command line)</li>
+                    <li>100 MB free disk space</li>
+                    <li>Stable internet connection</li>
+                    <li>Basic command line knowledge</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Trading Requirements</h4>
+                <ul>
+                    <li>Exchange account with API access enabled</li>
+                    <li>Some USDT/USD in your futures/derivatives account</li>
+                    <li>Understanding of market making risks</li>
                 </ul>
             </div>
             <div class="alert alert-info">
@@ -499,40 +752,62 @@
         <section id="windows-setup" class="section">
             <h2>Windows Setup</h2>
             
-            <h3>Step 1: Install Python</h3>
-            <div class="card">
-                <ol>
-                    <li>Download Python from <a href="https://python.org/downloads/" target="_blank">python.org</a></li>
-                    <li>Run the installer</li>
-                    <li><strong>IMPORTANT:</strong> Check "Add Python to PATH" during installation</li>
-                    <li>Click "Install Now"</li>
-                </ol>
-            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Install Python</div>
+                        <div class="step-description">
+                            <ol>
+                                <li>Download Python from <a href="https://python.org/downloads/" target="_blank">python.org</a></li>
+                                <li>Run the installer</li>
+                                <li><strong>IMPORTANT:</strong> Check "Add Python to PATH" during installation</li>
+                                <li>Click "Install Now"</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 2: Download the Bot</h3>
-            <div class="card">
-                <ol>
-                    <li>Go to <a href="https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot" target="_blank">GitHub Repository</a></li>
-                    <li>Click the green "Code" button → "Download ZIP"</li>
-                    <li>Extract the ZIP file to a folder (e.g., <code>C:\TradingBot</code>)</li>
-                    <li>Navigate to the <code>dist</code> folder</li>
-                </ol>
-            </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Download the Bot</div>
+                        <div class="step-description">
+                            <ol>
+                                <li>Go to <a href="https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot" target="_blank">GitHub Repository</a></li>
+                                <li>Click the green "Code" button → "Download ZIP"</li>
+                                <li>Extract the ZIP file to a folder (e.g., <code>C:\TradingBot</code>)</li>
+                                <li>Navigate to the <code>dist</code> folder</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 3: Install Dependencies</h3>
-            <div class="card">
-                <p>Open Command Prompt (Win+R, type <code>cmd</code>, press Enter)</p>
-                <pre><code>cd C:\TradingBot\dist
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Install Dependencies</div>
+                        <div class="step-description">
+                            <p>Open Command Prompt (Win+R, type <code>cmd</code>, press Enter)</p>
+                            <pre><code>cd C:\TradingBot\dist
 pip install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 4: Configure and Run</h3>
-            <div class="card">
-                <ol>
-                    <li>Double-click <code>configure_bot.bat</code> to open the configuration wizard</li>
-                    <li>Or copy <code>config.example.json</code> to <code>config.json</code> and edit manually</li>
-                    <li>Double-click <code>start_bot.bat</code> to run the bot</li>
-                </ol>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Configure and Run</div>
+                        <div class="step-description">
+                            <ol>
+                                <li>Double-click <code>configure_bot.bat</code> to open the configuration wizard</li>
+                                <li>Or copy <code>config.example.json</code> to <code>config.json</code> and edit manually</li>
+                                <li>Double-click <code>start_bot.bat</code> to run the bot</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -540,31 +815,53 @@ pip install -r requirements.txt</code><button class="copy-btn" onclick="copyCode
         <section id="mac-setup" class="section">
             <h2>Mac Setup</h2>
             
-            <h3>Step 1: Install Python (if needed)</h3>
-            <div class="card">
-                <p>Open Terminal (Cmd+Space, type "Terminal")</p>
-                <pre><code>python3 --version</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-                <p>If not installed, install via Homebrew:</p>
-                <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Install Python (if needed)</div>
+                        <div class="step-description">
+                            <p>Open Terminal (Cmd+Space, type "Terminal")</p>
+                            <pre><code>python3 --version</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                            <p>If not installed, install via Homebrew:</p>
+                            <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install python3</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 2: Download the Bot</h3>
-            <div class="card">
-                <pre><code>git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Download the Bot</div>
+                        <div class="step-description">
+                            <pre><code>git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
 cd Roboquant-Crypto-Market-Maker-Bot/dist</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 3: Install Dependencies</h3>
-            <div class="card">
-                <pre><code>pip3 install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Install Dependencies</div>
+                        <div class="step-description">
+                            <pre><code>pip3 install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 4: Configure and Run</h3>
-            <div class="card">
-                <pre><code>cp config.example.json config.json
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Configure and Run</div>
+                        <div class="step-description">
+                            <pre><code>cp config.example.json config.json
 nano config.json  # Edit your settings
 python3 market_maker_bot.py</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -572,8 +869,8 @@ python3 market_maker_bot.py</code><button class="copy-btn" onclick="copyCode(thi
         <section id="linux-setup" class="section">
             <h2>Linux Setup</h2>
             
-            <h3>Step 1: Install Python and Git</h3>
             <div class="card">
+                <h3>Step 1: Install Python and Git</h3>
                 <p>Ubuntu/Debian:</p>
                 <pre><code>sudo apt update
 sudo apt install python3 python3-pip git</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
@@ -581,8 +878,8 @@ sudo apt install python3 python3-pip git</code><button class="copy-btn" onclick=
                 <pre><code>sudo dnf install python3 python3-pip git</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
             </div>
 
-            <h3>Steps 2-4: Same as Mac</h3>
             <div class="card">
+                <h3>Steps 2-4: Same as Mac</h3>
                 <p>Follow the same steps as Mac setup for downloading, installing dependencies, and running the bot.</p>
             </div>
         </section>
@@ -610,34 +907,46 @@ sudo apt install python3 python3-pip git</code><button class="copy-btn" onclick=
         <section id="ec2-instance" class="section">
             <h2>Launching EC2 Instance</h2>
             
-            <h3>1. Access EC2 Dashboard</h3>
-            <div class="card">
-                <ol>
-                    <li>Login to <a href="https://console.aws.amazon.com" target="_blank">AWS Console</a></li>
-                    <li>Search for "EC2" in the search bar</li>
-                    <li>Click on "EC2" service</li>
-                </ol>
-            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Access EC2 Dashboard</div>
+                        <div class="step-description">
+                            <ol>
+                                <li>Login to <a href="https://console.aws.amazon.com" target="_blank">AWS Console</a></li>
+                                <li>Search for "EC2" in the search bar</li>
+                                <li>Click on "EC2" service</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>2. Launch Instance</h3>
-            <div class="card">
-                <ol>
-                    <li>Click orange "Launch instance" button</li>
-                    <li><strong>Name:</strong> MarketMakerBot</li>
-                    <li><strong>OS:</strong> Select "Amazon Linux 2023 AMI"</li>
-                    <li><strong>Instance type:</strong> t3.micro (free tier eligible)</li>
-                    <li><strong>Key pair:</strong>
-                        <ul>
-                            <li>Click "Create new key pair"</li>
-                            <li>Name: market-maker-key</li>
-                            <li>Type: RSA</li>
-                            <li>Format: .pem</li>
-                            <li><strong>SAVE THE DOWNLOADED FILE SAFELY!</strong></li>
-                        </ul>
-                    </li>
-                    <li>Leave other settings as default</li>
-                    <li>Click "Launch instance"</li>
-                </ol>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Launch Instance</div>
+                        <div class="step-description">
+                            <ol>
+                                <li>Click orange "Launch instance" button</li>
+                                <li><strong>Name:</strong> MarketMakerBot</li>
+                                <li><strong>OS:</strong> Select "Amazon Linux 2023 AMI"</li>
+                                <li><strong>Instance type:</strong> t3.micro (free tier eligible)</li>
+                                <li><strong>Key pair:</strong>
+                                    <ul>
+                                        <li>Click "Create new key pair"</li>
+                                        <li>Name: market-maker-key</li>
+                                        <li>Type: RSA</li>
+                                        <li>Format: .pem</li>
+                                        <li><strong>SAVE THE DOWNLOADED FILE SAFELY!</strong></li>
+                                    </ul>
+                                </li>
+                                <li>Leave other settings as default</li>
+                                <li>Click "Launch instance"</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="alert alert-warning">
@@ -649,8 +958,8 @@ sudo apt install python3 python3-pip git</code><button class="copy-btn" onclick=
         <section id="connect-server" class="section">
             <h2>Connecting to Your Server</h2>
             
-            <h3>Windows (Using PuTTY)</h3>
             <div class="card">
+                <h3>Windows (Using PuTTY)</h3>
                 <h4>1. Download PuTTY</h4>
                 <p>Download from <a href="https://www.putty.org/download.html" target="_blank">putty.org</a></p>
                 
@@ -671,8 +980,8 @@ sudo apt install python3 python3-pip git</code><button class="copy-btn" onclick=
                 </ol>
             </div>
 
-            <h3>Mac/Linux</h3>
             <div class="card">
+                <h3>Mac/Linux</h3>
                 <pre><code>chmod 400 ~/Downloads/market-maker-key.pem
 ssh -i ~/Downloads/market-maker-key.pem ec2-user@YOUR-IP-ADDRESS</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
             </div>
@@ -682,35 +991,62 @@ ssh -i ~/Downloads/market-maker-key.pem ec2-user@YOUR-IP-ADDRESS</code><button c
         <section id="install-aws" class="section">
             <h2>Installing the Bot on AWS</h2>
             
-            <h3>Step 1: Update System and Install Requirements</h3>
-            <div class="card">
-                <pre><code>sudo yum update -y
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Update System and Install Requirements</div>
+                        <div class="step-description">
+                            <pre><code>sudo yum update -y
 sudo yum install -y python3 python3-pip git screen</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 2: Clone Repository</h3>
-            <div class="card">
-                <pre><code>git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Clone Repository</div>
+                        <div class="step-description">
+                            <pre><code>git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
 cd Roboquant-Crypto-Market-Maker-Bot/dist</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 3: Install Python Dependencies</h3>
-            <div class="card">
-                <pre><code>pip3 install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Install Python Dependencies</div>
+                        <div class="step-description">
+                            <pre><code>pip3 install -r requirements.txt</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 4: Configure the Bot</h3>
-            <div class="card">
-                <pre><code>cp config.example.json config.json
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Configure the Bot</div>
+                        <div class="step-description">
+                            <pre><code>cp config.example.json config.json
 nano config.json</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <h3>Step 5: Run with Screen</h3>
-            <div class="card">
-                <pre><code>screen -S marketmaker
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Run with Screen</div>
+                        <div class="step-description">
+                            <pre><code>screen -S marketmaker
 python3 market_maker_bot.py</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
-                <p>Detach with <code>Ctrl+A</code> then <code>D</code></p>
-                <p>Reattach with <code>screen -r marketmaker</code></p>
+                            <p>Detach with <code>Ctrl+A</code> then <code>D</code></p>
+                            <p>Reattach with <code>screen -r marketmaker</code></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -718,8 +1054,8 @@ python3 market_maker_bot.py</code><button class="copy-btn" onclick="copyCode(thi
         <section id="api-keys" class="section">
             <h2>Getting API Keys</h2>
             
-            <h3>Binance</h3>
             <div class="card">
+                <h3>Binance</h3>
                 <ol>
                     <li>Login to Binance.com</li>
                     <li>Profile icon → API Management</li>
@@ -730,8 +1066,8 @@ python3 market_maker_bot.py</code><button class="copy-btn" onclick="copyCode(thi
                 </ol>
             </div>
 
-            <h3>Bybit</h3>
             <div class="card">
+                <h3>Bybit</h3>
                 <ol>
                     <li>Login to Bybit.com</li>
                     <li>Account & Security → API</li>
@@ -967,6 +1303,9 @@ python3 market_maker_bot.py
         </section>
     </main>
 
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" onclick="scrollToTop()">↑</button>
+
     <!-- JavaScript -->
     <script>
         // Toggle mobile navigation
@@ -1009,6 +1348,14 @@ python3 market_maker_bot.py
                     link.classList.add('active');
                 }
             });
+
+            // Show/hide scroll to top button
+            const scrollBtn = document.querySelector('.scroll-top');
+            if (window.scrollY > 500) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
         });
 
         // Smooth scroll for navigation links
@@ -1028,6 +1375,33 @@ python3 market_maker_bot.py
         // Add animation delay to sections
         document.querySelectorAll('.section').forEach((section, index) => {
             section.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Scroll to top
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Add fade-in animation to feature cards
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .exchange-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
         });
     </script>
 </body>
