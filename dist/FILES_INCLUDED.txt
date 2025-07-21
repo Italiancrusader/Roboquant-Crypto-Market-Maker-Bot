@@ -14,6 +14,8 @@ Documentation:
 ✓ QUICK_START.md         - Quick start instructions
 ✓ AWS_CONNECTION_GUIDE.md - Detailed AWS EC2 setup guide
 ✓ AWS_BEGINNER_GUIDE.md  - Complete beginner's AWS guide
+✓ COMPLETE_SETUP_GUIDE.md - Unified setup guide for all platforms
+✓ setup_guide.html       - Interactive HTML setup guide
 ✓ LICENSE                - MIT License
 
 Windows Files:
