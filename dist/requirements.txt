@@ -1,0 +1,10 @@
+# Core dependencies for Universal Market Making Bot
+ccxt>=4.0.0
+numpy>=1.24.0
+python-dotenv>=1.0.0
+
+# Optional dependencies for enhanced features
+pandas>=2.0.0  # For data analysis
+requests>=2.31.0  # For API calls
+pyyaml>=6.0  # For YAML config support
+colorama>=0.4.6  # For colored terminal output
