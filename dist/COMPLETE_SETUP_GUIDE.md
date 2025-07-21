@@ -1,206 +1,135 @@
-<p align="center">
-  <img src="Asset 3.svg" alt="Roboquant Logo" width="200"/>
-</p>
+Roboquant Universal Market Making Bot - Complete Setup Guide
 
-<h1 align="center">Roboquant Universal Market Making Bot</h1>
-<h3 align="center">Complete Setup & Installation Guide</h3>
+Copyright 2025 Roboquant - Professional Cryptocurrency Trading Solutions
+Website: roboquant.ai
 
-<p align="center">
-  <strong>© 2025 Roboquant - Professional Cryptocurrency Trading Solutions</strong><br>
-  <a href="https://roboquant.ai">roboquant.ai</a>
-</p>
+This guide covers all installation methods: Windows, Mac, Linux, and AWS cloud servers.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/Exchanges-11+-orange.svg" alt="Exchanges">
-</p>
+Table of Contents
 
----
+1. Prerequisites
+2. Supported Exchanges
+3. Local Installation
+   - Windows Setup
+   - Mac Setup
+   - Linux Setup
+4. AWS Cloud Installation
+   - Creating AWS Account
+   - Launching EC2 Instance
+   - Connecting to Your Server
+   - Installing the Bot on AWS
+5. Configuration
+   - Getting API Keys
+   - Configuring the Bot
+   - Strategy Settings
+6. Running the Bot
+7. Monitoring and Management
+8. Troubleshooting
+9. Safety Guidelines
 
-## 📋 Table of Contents
+Prerequisites
 
-- [🚀 Quick Start](#-quick-start)
-- [✅ Prerequisites](#-prerequisites)
-- [🏦 Supported Exchanges](#-supported-exchanges)
-- [💻 Local Installation](#-local-installation)
-  - [Windows Setup](#windows-setup)
-  - [Mac Setup](#mac-setup)
-  - [Linux Setup](#linux-setup)
-- [☁️ AWS Cloud Installation](#️-aws-cloud-installation)
-  - [Creating AWS Account](#creating-aws-account)
-  - [Launching EC2 Instance](#launching-ec2-instance)
-  - [Connecting to Your Server](#connecting-to-your-server)
-  - [Installing the Bot on AWS](#installing-the-bot-on-aws)
-- [⚙️ Configuration](#️-configuration)
-  - [Getting API Keys](#getting-api-keys)
-  - [Configuring the Bot](#configuring-the-bot)
-  - [Strategy Settings](#strategy-settings)
-- [▶️ Running the Bot](#️-running-the-bot)
-- [📊 Monitoring and Management](#-monitoring-and-management)
-- [🔧 Troubleshooting](#-troubleshooting)
-- [⚠️ Safety Guidelines](#️-safety-guidelines)
+- Python 3.8 or higher
+- Exchange account with API access
+- Some USDT/USD in your exchange account
+- Basic computer skills (ability to use command line)
 
----
+Supported Exchanges
 
-## 🚀 Quick Start
+- Binance
+- Bybit
+- OKX
+- KuCoin
+- Gate.io
+- MEXC
+- Bitget
+- Hyperliquid
+- Phemex
+- Huobi
+- Kraken
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
-cd Roboquant-Crypto-Market-Maker-Bot/dist
+Local Installation
 
-# 2. Install dependencies
-pip install -r requirements.txt
+Windows Setup
 
-# 3. Configure
-cp config.example.json config.json
-# Edit config.json with your API keys
-
-# 4. Run
-python market_maker_bot.py
-```
-
----
-
-## ✅ Prerequisites
-
-| Requirement | Details |
-|------------|---------|
-| **Python** | Version 3.8 or higher |
-| **Exchange Account** | With API access enabled |
-| **Capital** | Some USDT/USD in futures account |
-| **Skills** | Basic command line knowledge |
-
----
-
-## 🏦 Supported Exchanges
-
-<table>
-<tr>
-<td align="center"><strong>Binance</strong></td>
-<td align="center"><strong>Bybit</strong></td>
-<td align="center"><strong>OKX</strong></td>
-<td align="center"><strong>KuCoin</strong></td>
-</tr>
-<tr>
-<td align="center"><strong>Gate.io</strong></td>
-<td align="center"><strong>MEXC</strong></td>
-<td align="center"><strong>Bitget</strong></td>
-<td align="center"><strong>Hyperliquid</strong></td>
-</tr>
-<tr>
-<td align="center"><strong>Phemex</strong></td>
-<td align="center"><strong>Huobi</strong></td>
-<td align="center"><strong>Kraken</strong></td>
-<td align="center">More coming...</td>
-</tr>
-</table>
-
----
-
-## 💻 Local Installation
-
-### Windows Setup
-
-<details>
-<summary><b>📌 Click to expand Windows instructions</b></summary>
-
-#### 🔹 Step 1: Install Python
-1. Download Python from [python.org](https://python.org/downloads/)
+Step 1: Install Python
+1. Download Python from python.org/downloads/
 2. Run the installer
-3. ⚠️ **IMPORTANT**: Check "Add Python to PATH" during installation
+3. IMPORTANT: Check "Add Python to PATH" during installation
 4. Click "Install Now"
 
-#### 🔹 Step 2: Download the Bot
-1. Go to the [GitHub Repository](https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot)
-2. Click the green "Code" button → "Download ZIP"
-3. Extract the ZIP file to a folder (e.g., `C:\TradingBot`)
-4. Navigate to the `dist` folder
+Step 2: Download the Bot
+1. Go to https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot
+2. Click the green "Code" button then "Download ZIP"
+3. Extract the ZIP file to a folder (e.g., C:\TradingBot)
+4. Navigate to the dist folder
 
-#### 🔹 Step 3: Install Dependencies
-Open Command Prompt (Win+R, type `cmd`, press Enter):
-```cmd
-cd C:\TradingBot\dist
-pip install -r requirements.txt
-```
+Step 3: Install Dependencies
+1. Open Command Prompt (Win+R, type cmd, press Enter)
+2. Navigate to the bot folder:
+   cd C:\TradingBot\dist
+3. Install requirements:
+   pip install -r requirements.txt
 
-#### 🔹 Step 4: Configure and Run
-1. Double-click `configure_bot.bat` to open the configuration wizard
-2. Or copy `config.example.json` to `config.json` and edit manually
-3. Double-click `start_bot.bat` to run the bot
+Step 4: Configure and Run
+1. Double-click configure_bot.bat to open the configuration wizard
+2. Or copy config.example.json to config.json and edit manually
+3. Double-click start_bot.bat to run the bot
 
-</details>
+Mac Setup
 
-### Mac Setup
+Step 1: Install Python (if needed)
+1. Open Terminal (Cmd+Space, type "Terminal")
+2. Check if Python is installed:
+   python3 --version
+3. If not installed, install via Homebrew:
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   brew install python3
 
-<details>
-<summary><b>📌 Click to expand Mac instructions</b></summary>
+Step 2: Download the Bot
+1. Clone the repository:
+   git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+   cd Roboquant-Crypto-Market-Maker-Bot/dist
+2. Or download ZIP from GitHub and extract
 
-#### 🔹 Step 1: Install Python (if needed)
-Open Terminal (Cmd+Space, type "Terminal"):
-```bash
-# Check if Python is installed
-python3 --version
-
-# If not installed, install via Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install python3
-```
-
-#### 🔹 Step 2: Download the Bot
-```bash
-git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
-cd Roboquant-Crypto-Market-Maker-Bot/dist
-```
-
-#### 🔹 Step 3: Install Dependencies
-```bash
+Step 3: Install Dependencies
 pip3 install -r requirements.txt
-```
 
-#### 🔹 Step 4: Configure and Run
-```bash
-cp config.example.json config.json
-nano config.json  # Edit your settings
-python3 market_maker_bot.py
-```
+Step 4: Configure and Run
+1. Copy example config:
+   cp config.example.json config.json
+2. Edit config:
+   nano config.json
+3. Run the bot:
+   python3 market_maker_bot.py
 
-</details>
+Linux Setup
 
-### Linux Setup
-
-<details>
-<summary><b>📌 Click to expand Linux instructions</b></summary>
-
-#### 🔹 Step 1: Install Python and Git
-
-**Ubuntu/Debian:**
-```bash
+Step 1: Install Python and Git
+Ubuntu/Debian:
 sudo apt update
 sudo apt install python3 python3-pip git
-```
 
-**Fedora/RHEL:**
-```bash
+Fedora/RHEL:
 sudo dnf install python3 python3-pip git
-```
 
-#### 🔹 Step 2-4: Same as Mac
-Follow the same steps as Mac setup above.
+Step 2: Download the Bot
+git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+cd Roboquant-Crypto-Market-Maker-Bot/dist
 
-</details>
+Step 3: Install Dependencies
+pip3 install -r requirements.txt
 
----
+Step 4: Configure and Run
+cp config.example.json config.json
+nano config.json
+python3 market_maker_bot.py
 
-## ☁️ AWS Cloud Installation
+AWS Cloud Installation
 
-### Creating AWS Account
+Creating AWS Account
 
-<details>
-<summary><b>📌 Click to expand AWS account creation</b></summary>
-
-1. Go to [aws.amazon.com](https://aws.amazon.com)
+1. Go to aws.amazon.com
 2. Click "Create an AWS Account"
 3. Enter email and password
 4. Choose "Personal" account type
@@ -208,135 +137,114 @@ Follow the same steps as Mac setup above.
 6. Verify phone number
 7. Select "Basic support - Free"
 
-> 💡 **Tip**: AWS offers 12 months of free tier for new accounts!
+Note: AWS offers 12 months of free tier for new accounts, including 750 hours/month of t3.micro instances.
 
-</details>
+Launching EC2 Instance
 
-### Launching EC2 Instance
+1. Login to AWS Console
+   - Go to console.aws.amazon.com
+   - Search for "EC2" and click it
 
-<details>
-<summary><b>📌 Click to expand EC2 setup</b></summary>
+2. Launch Instance
+   - Click orange "Launch instance" button
+   - Name: MarketMakerBot
+   - OS: Select "Amazon Linux 2023 AMI"
+   - Instance type: t3.micro (free tier eligible)
+   - Key pair: 
+     - Click "Create new key pair"
+     - Name: market-maker-key
+     - Type: RSA
+     - Format: .pem
+     - SAVE THE DOWNLOADED FILE SAFELY!
+   - Leave other settings as default
+   - Click "Launch instance"
 
-#### 1️⃣ Access EC2 Dashboard
-- Login to [AWS Console](https://console.aws.amazon.com)
-- Search for "EC2" and click it
+3. Wait for Instance
+   - Click "View all instances"
+   - Wait for "Running" status
+   - Note your Public IPv4 address
 
-#### 2️⃣ Launch Instance
-- Click orange "Launch instance" button
-- Configure:
-  - **Name**: `MarketMakerBot`
-  - **OS**: Amazon Linux 2023 AMI
-  - **Instance type**: `t3.micro` (free tier eligible)
-  - **Key pair**: 
-    - Click "Create new key pair"
-    - Name: `market-maker-key`
-    - Type: RSA
-    - Format: .pem
-    - 🔐 **SAVE THE DOWNLOADED FILE SAFELY!**
-  - Leave other settings as default
-  - Click "Launch instance"
+Connecting to Your Server
 
-#### 3️⃣ Wait for Instance
-- Click "View all instances"
-- Wait for "Running" status
-- Note your Public IPv4 address
+Windows (Using PuTTY)
 
-</details>
+1. Download PuTTY
+   - Go to putty.org/download.html
+   - Download and install PuTTY
 
-### Connecting to Your Server
-
-<details>
-<summary><b>📌 Click to expand connection instructions</b></summary>
-
-#### 🖥️ Windows (Using PuTTY)
-
-1. **Download PuTTY** from [putty.org](https://www.putty.org/download.html)
-2. **Convert Key**:
+2. Convert Key
    - Open PuTTYgen
-   - Click "Load" → Select your .pem file
-   - Click "Save private key" → Save as .ppk
-3. **Connect**:
+   - Click "Load" then Select your .pem file
+   - Click "Save private key" then Save as .ppk
+
+3. Connect
    - Open PuTTY
-   - Host: `ec2-user@YOUR-IP-ADDRESS`
+   - Host: ec2-user@YOUR-IP-ADDRESS
    - Port: 22
-   - Connection → SSH → Auth → Browse → Select .ppk file
+   - Connection SSH Auth Browse Select .ppk file
    - Click "Open"
 
-#### 🍎 Mac/Linux
+Mac/Linux
 
-```bash
-# Set key permissions
-chmod 400 ~/Downloads/market-maker-key.pem
+1. Set Key Permissions
+   chmod 400 ~/Downloads/market-maker-key.pem
 
-# Connect
-ssh -i ~/Downloads/market-maker-key.pem ec2-user@YOUR-IP-ADDRESS
-```
+2. Connect
+   ssh -i ~/Downloads/market-maker-key.pem ec2-user@YOUR-IP-ADDRESS
 
-</details>
-
-### Installing the Bot on AWS
+Installing the Bot on AWS
 
 Once connected to your EC2 instance:
 
-```bash
-# 1. Update system and install requirements
-sudo yum update -y
-sudo yum install -y python3 python3-pip git screen
+1. Update System and Install Requirements
+   sudo yum update -y
+   sudo yum install -y python3 python3-pip git screen
 
-# 2. Clone the repository
-git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
-cd Roboquant-Crypto-Market-Maker-Bot/dist
+2. Clone the Repository
+   git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+   cd Roboquant-Crypto-Market-Maker-Bot/dist
 
-# 3. Install Python dependencies
-pip3 install -r requirements.txt
+3. Install Python Dependencies
+   pip3 install -r requirements.txt
 
-# 4. Configure the bot
-cp config.example.json config.json
-nano config.json
+4. Configure the Bot
+   cp config.example.json config.json
+   nano config.json
 
-# 5. Run in background with screen
-screen -S marketmaker
-python3 market_maker_bot.py
-# Detach: Ctrl+A then D
-# Reattach: screen -r marketmaker
-```
+5. Run in Background with Screen
+   screen -S marketmaker
+   python3 market_maker_bot.py
+   - Detach: Ctrl+A then D
+   - Reattach: screen -r marketmaker
 
----
+Configuration
 
-## ⚙️ Configuration
+Getting API Keys
 
-### Getting API Keys
-
-<details>
-<summary><b>🔑 Binance API Setup</b></summary>
-
+Binance
 1. Login to Binance.com
-2. Profile icon → API Management
-3. Create API → System generated
+2. Profile icon API Management
+3. Create API System generated
 4. Label: "MarketMaker"
 5. Enable "Enable Futures" permission
 6. Save API Key and Secret
 
-</details>
-
-<details>
-<summary><b>🔑 Bybit API Setup</b></summary>
-
+Bybit
 1. Login to Bybit.com
-2. Account & Security → API
+2. Account & Security API
 3. Create New Key
 4. System-generated API Keys
 5. Enable "Derivatives API v3"
 6. Enable "Orders" and "Positions"
 7. Save API Key and Secret
 
-</details>
+Other Exchanges
+Similar process - create API key with futures/derivatives trading permissions.
 
-### Configuring the Bot
+Configuring the Bot
 
-Create your `config.json`:
+Edit config.json with your settings:
 
-```json
 {
   "exchange": {
     "name": "bybit",
@@ -368,119 +276,127 @@ Create your `config.json`:
     "daily_loss_limit_usd": 50
   }
 }
-```
 
-### Strategy Settings
+Strategy Settings
 
-| Profile | Risk Level | Best For | Settings |
-|---------|-----------|----------|----------|
-| **🟢 Conservative** | Low | Beginners | `gamma`: 0.5<br>`leverage`: 1<br>`order_size_percent`: 0.005<br>`update_frequency`: 5 |
-| **🟡 Balanced** | Medium | Most Users | `gamma`: 0.1<br>`leverage`: 5<br>`order_size_percent`: 0.01<br>`update_frequency`: 2 |
-| **🔴 Aggressive** | High | Experienced | `gamma`: 0.01<br>`leverage`: 10<br>`order_size_percent`: 0.02<br>`update_frequency`: 0.5 |
+Conservative (Beginners)
+- gamma: 0.5 (high risk aversion)
+- leverage: 1 (no leverage)
+- order_size_percent: 0.005 (0.5% of balance)
+- update_frequency: 5 (update every 5 seconds)
 
----
+Balanced
+- gamma: 0.1
+- leverage: 5
+- order_size_percent: 0.01
+- update_frequency: 2
 
-## ▶️ Running the Bot
+Aggressive
+- gamma: 0.01
+- leverage: 10
+- order_size_percent: 0.02
+- update_frequency: 0.5
 
-### 🖥️ Local (Windows)
-```cmd
+Running the Bot
+
+Local (Windows)
 start_bot.bat
-```
 
-### 🍎 Local (Mac/Linux)
-```bash
+Local (Mac/Linux)
 ./start_bot.sh
-# or
+or
 python3 market_maker_bot.py
-```
 
-### ☁️ AWS/Cloud
-```bash
+AWS/Cloud
 screen -S marketmaker
 python3 market_maker_bot.py
-# Detach with Ctrl+A, D
-```
+Detach with Ctrl+A, D
 
----
+Monitoring and Management
 
-## 📊 Monitoring and Management
-
-### 📈 Real-time Monitoring
-```bash
-# View logs
+View Logs
 tail -f market_maker.log
 
-# Bot displays:
-# ✓ Current price and spread
-# ✓ Inventory and balance
-# ✓ Number of trades
-# ✓ Profit/Loss
-```
+Check Status
+The bot displays:
+- Current price and spread
+- Inventory and balance
+- Number of trades
+- Profit/Loss
 
-### 🛑 Stopping the Bot
-- **Local**: Press `Ctrl+C`
-- **Screen**: Reattach and `Ctrl+C`
-- **Service**: `sudo systemctl stop marketmaker`
+Stop the Bot
+- Local: Ctrl+C
+- Screen: Reattach and Ctrl+C
+- Service: sudo systemctl stop marketmaker
 
----
+Troubleshooting
 
-## 🔧 Troubleshooting
+Common Issues
 
-### Common Issues & Solutions
+"Module not found"
+pip3 install -r requirements.txt --upgrade
 
-| Issue | Solution |
-|-------|----------|
-| **"Module not found"** | `pip3 install -r requirements.txt --upgrade` |
-| **"API key invalid"** | • Check API credentials<br>• Enable futures trading<br>• Verify mainnet/testnet |
-| **"Insufficient balance"** | • Add USDT to futures account<br>• Reduce `order_size_percent`<br>• Check minimum order size |
-| **"Symbol not found"** | • Check format: `ETH/USDT:USDT`<br>• Verify exchange support |
-| **AWS: "git not found"** | `sudo yum install -y git` |
+"API key invalid"
+- Check API key and secret are correct
+- Ensure futures/derivatives trading is enabled
+- Check if using correct network (mainnet vs testnet)
 
-### 💡 Getting Help
-1. Check `market_maker.log` for detailed errors
-2. Verify configuration in `config.json`
+"Insufficient balance"
+- Add USDT to your futures account
+- Reduce order_size_percent
+- Check minimum order requirements
+
+"Symbol not found"
+- Check symbol format (e.g., "ETH/USDT:USDT" for perpetuals)
+- Verify exchange supports the trading pair
+
+AWS: "git: command not found"
+sudo yum install -y git
+
+Getting Help
+1. Check market_maker.log for detailed errors
+2. Verify configuration in config.json
 3. Test with small amounts first
 4. Use testnet if available
 
----
+Safety Guidelines
 
-## ⚠️ Safety Guidelines
+For Beginners
+1. Start Small: Test with $50-100
+2. Use Conservative Settings
+3. Monitor Closely: Check every few hours initially
+4. Set Stop Losses: Always use risk management
+5. Understand the Strategy: Read about market making
 
-### 🛡️ For Beginners
-1. **Start Small**: Test with $50-100
-2. **Use Conservative Settings**
-3. **Monitor Closely**: Check every few hours initially
-4. **Set Stop Losses**: Always use risk management
-5. **Understand the Strategy**: Read about market making
+Risk Management
+- Set appropriate max_inventory_usd
+- Use stop_loss_percent
+- Configure daily_loss_limit_usd
+- Start with low leverage or no leverage
+- Never invest more than you can afford to lose
 
-### 📊 Risk Management
-- ✅ Set appropriate `max_inventory_usd`
-- ✅ Use `stop_loss_percent`
-- ✅ Configure `daily_loss_limit_usd`
-- ✅ Start with low leverage or no leverage
-- ✅ Never invest more than you can afford to lose
+Security
+- Never share API keys or .pem files
+- Use API restrictions (IP whitelist if available)
+- Regularly monitor your exchange account
+- Keep your server/computer secure
+- Use strong passwords
 
-### 🔒 Security Best Practices
-- 🚫 Never share API keys or .pem files
-- 🔐 Use API restrictions (IP whitelist)
-- 👀 Regularly monitor your exchange account
-- 🛡️ Keep your server/computer secure
-- 🔑 Use strong passwords
+AWS Cost Management
+- Stop EC2 instance when not trading
+- Monitor AWS billing dashboard
+- Use t3.micro for free tier benefits
+- Set up billing alerts
 
-### 💰 AWS Cost Management
-- ⏸️ Stop EC2 instance when not trading
-- 📊 Monitor AWS billing dashboard
-- 🆓 Use t3.micro for free tier benefits
-- 🔔 Set up billing alerts
+Support
 
----
+For issues:
+1. Check this guide thoroughly
+2. Review error messages in logs
+3. Ensure all prerequisites are met
+4. Test with minimal settings first
 
-<p align="center">
-  <strong>© 2025 Roboquant - Professional Cryptocurrency Trading Solutions</strong><br>
-  <a href="https://roboquant.ai">Website</a> • 
-  <a href="https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot">GitHub</a>
-</p>
+Copyright 2025 Roboquant - Professional Cryptocurrency Trading Solutions
+Website: https://roboquant.ai
 
-<p align="center">
-  <em>⚠️ Cryptocurrency trading carries significant risks. This bot is for educational purposes. Always trade responsibly.</em>
-</p>
+Remember: Cryptocurrency trading carries significant risks. This bot is for educational purposes. Always trade responsibly.
