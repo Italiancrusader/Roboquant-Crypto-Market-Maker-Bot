@@ -1,7 +1,9 @@
 #!/bin/bash
 
 echo "========================================"
-echo "Universal Market Making Bot Launcher"
+echo "   Roboquant Market Maker Bot"
+echo "   © 2025 Roboquant"
+echo "   Professional Trading Solutions"
 echo "========================================"
 echo ""
 
@@ -47,7 +49,7 @@ if ! python -c "import ccxt" &> /dev/null; then
 fi
 
 echo ""
-echo "Starting Market Making Bot..."
+echo "Starting Roboquant Market Making Bot..."
 echo "Press Ctrl+C to stop the bot"
 echo ""
 echo "========================================"

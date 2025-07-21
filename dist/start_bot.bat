@@ -1,6 +1,8 @@
 @echo off
 echo ========================================
-echo Universal Market Making Bot Launcher
+echo    Roboquant Market Maker Bot
+echo    (C) 2025 Roboquant
+echo    Professional Trading Solutions
 echo ========================================
 echo.
 
@@ -40,7 +42,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo Starting Market Making Bot...
+echo Starting Roboquant Market Making Bot...
 echo Press Ctrl+C to stop the bot
 echo.
 echo ========================================

@@ -1,6 +1,8 @@
 @echo off
 echo ========================================
-echo Market Making Bot Configuration Wizard
+echo    Roboquant Configuration Wizard
+echo    (C) 2025 Roboquant
+echo    Professional Trading Solutions
 echo ========================================
 echo.
 

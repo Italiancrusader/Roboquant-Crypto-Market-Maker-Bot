@@ -1,10 +1,12 @@
 #!/bin/bash
 
 echo "========================================"
-echo "Market Making Bot - AWS Setup Script"
+echo "   Roboquant Market Maker Bot"
+echo "   AWS/VPS Setup Script"
+echo "   © 2025 Roboquant"
 echo "========================================"
 echo ""
-echo "This script will set up the bot on your AWS/Linux server"
+echo "This script will set up Roboquant bot on your AWS/Linux server"
 echo ""
 
 # Detect OS
@@ -101,7 +103,7 @@ EOF
 
 echo ""
 echo "========================================"
-echo "Setup Complete!"
+echo "Roboquant Setup Complete!"
 echo "========================================"
 echo ""
 echo "Next steps:"

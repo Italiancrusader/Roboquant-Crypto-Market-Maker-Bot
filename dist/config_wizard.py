@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Configuration Wizard for Market Making Bot
+Configuration Wizard for Market Making Bot - Roboquant
+© 2025 Roboquant - Professional Cryptocurrency Trading Solutions
 Simple GUI to help users configure the bot without editing JSON
+Website: https://roboquant.ai
 """
 
 import tkinter as tk
@@ -13,7 +15,7 @@ import sys
 class ConfigWizard:
     def __init__(self, root):
         self.root = root
-        self.root.title("Market Making Bot Configuration Wizard")
+        self.root.title("Roboquant Market Maker Bot - Configuration Wizard")
         self.root.geometry("800x700")
         
         # Create notebook for tabs
@@ -54,9 +56,13 @@ class ConfigWizard:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Exchange Settings")
         
-        # Title
-        tk.Label(tab, text="Exchange Configuration", font=('Arial', 16, 'bold')).grid(
-            row=0, column=0, columnspan=2, pady=10)
+        # Title with Roboquant branding
+        title_frame = tk.Frame(tab)
+        title_frame.grid(row=0, column=0, columnspan=2, pady=10)
+        tk.Label(title_frame, text="🤖 Roboquant Exchange Configuration", 
+                font=('Arial', 16, 'bold')).pack()
+        tk.Label(title_frame, text="Professional Cryptocurrency Trading Solutions", 
+                font=('Arial', 10, 'italic'), fg='gray').pack()
         
         # Exchange selection
         tk.Label(tab, text="Select Exchange:").grid(row=1, column=0, sticky='e', padx=5, pady=5)

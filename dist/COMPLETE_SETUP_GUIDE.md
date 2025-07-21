@@ -1,4 +1,6 @@
-# Universal Market Making Bot - Complete Setup Guide
+# Roboquant Universal Market Making Bot - Complete Setup Guide
+
+© 2025 Roboquant - Professional Cryptocurrency Trading Solutions
 
 This guide covers all installation methods: Windows, Mac, Linux, and AWS cloud servers.
 
@@ -445,5 +447,10 @@ For issues:
 2. Review error messages in logs
 3. Ensure all prerequisites are met
 4. Test with minimal settings first
+
+---
+
+**© 2025 Roboquant - Professional Cryptocurrency Trading Solutions**  
+Website: https://roboquant.ai
 
 Remember: Cryptocurrency trading carries significant risks. This bot is for educational purposes. Always trade responsibly.

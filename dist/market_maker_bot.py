@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Universal Market Making Bot
-Supports multiple cryptocurrency exchanges with Avellaneda-Stoikov strategy
+Universal Market Making Bot - Roboquant
+© 2025 Roboquant - Professional Cryptocurrency Trading Solutions
+Supports multiple exchanges through CCXT
+Website: https://roboquant.ai
 """
 
 import ccxt
