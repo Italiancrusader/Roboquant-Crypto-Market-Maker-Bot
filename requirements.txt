@@ -1,5 +1,0 @@
-pandas
-requests
-pyyaml
-schedule
-# plus any others you need (e.g., python-dotenv)
