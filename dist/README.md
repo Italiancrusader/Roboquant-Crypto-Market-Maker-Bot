@@ -49,128 +49,236 @@ A professional cryptocurrency market making bot that supports multiple exchanges
    python market_maker_bot.py
    ```
 
-### Option 2: AWS/Cloud Server Installation
+### Option 2: AWS Amazon Linux - Complete Beginner Guide
 
-1. **Launch an EC2 instance** (or any VPS)
-   - Recommended: t3.micro or t3.small
-   - OS: Amazon Linux 2023, Ubuntu 20.04/22.04, or similar
+**📚 For an even more detailed step-by-step guide with screenshots and troubleshooting, see [AWS_BEGINNER_GUIDE.md](AWS_BEGINNER_GUIDE.md)**
 
-2. **Connect to your server**
-   
-   For Amazon Linux:
+#### Step 1: Create an AWS Account
+1. Go to [aws.amazon.com](https://aws.amazon.com)
+2. Click "Create an AWS Account"
+3. Follow the signup process (you'll need a credit card)
+
+#### Step 2: Launch Your Server (EC2 Instance)
+
+1. **Login to AWS Console**
+   - Go to [console.aws.amazon.com](https://console.aws.amazon.com)
+   - Search for "EC2" in the search bar and click on it
+
+2. **Click "Launch Instance"** (orange button)
+
+3. **Configure your server:**
+   - **Name**: Type "MarketMakerBot" (or any name you like)
+   - **Application and OS Images**: 
+     - Click on "Amazon Linux"
+     - Select "Amazon Linux 2023 AMI" (should be selected by default)
+   - **Instance type**: 
+     - Select "t3.micro" (it's free tier eligible)
+   - **Key pair**:
+     - Click "Create new key pair"
+     - Key pair name: "market-maker-key" (or any name)
+     - Key pair type: RSA
+     - Private key format: .pem
+     - Click "Create key pair"
+     - **IMPORTANT**: Save this file safely! You need it to connect to your server
+   - **Network settings**:
+     - Leave everything as default
+   - Click **"Launch instance"** (orange button at bottom)
+
+4. **Wait for your server to start**
+   - Click "View all instances"
+   - Wait until "Instance state" shows "Running" (about 1-2 minutes)
+   - Note down your "Public IPv4 address" (looks like: 18.185.28.165)
+
+#### Step 3: Connect to Your Server
+
+**For Windows Users:**
+
+1. **Download PuTTY**
+   - Go to [putty.org](https://www.putty.org/download.html)
+   - Download "putty.exe" and "puttygen.exe"
+
+2. **Convert your key file**
+   - Open PuTTYgen
+   - Click "Load" and select your .pem file (the one you downloaded)
+   - Click "Save private key" (ignore the warning)
+   - Save it as "market-maker-key.ppk"
+
+3. **Connect with PuTTY**
+   - Open PuTTY
+   - Host Name: `ec2-user@YOUR-IP-ADDRESS` (replace YOUR-IP-ADDRESS with your server's IP)
+   - Port: 22
+   - Connection type: SSH
+   - In the left menu: Connection → SSH → Auth → Credentials
+   - Browse and select your .ppk file
+   - Click "Open"
+   - Click "Accept" on the security alert
+
+**For Mac/Linux Users:**
+
+1. **Open Terminal**
+   - Mac: Press Cmd+Space, type "Terminal", press Enter
+   - Linux: Press Ctrl+Alt+T
+
+2. **Set key permissions**
    ```bash
-   ssh -i your-key.pem ec2-user@your-server-ip
+   chmod 400 ~/Downloads/market-maker-key.pem
    ```
-   
-   For Ubuntu:
-   ```bash
-   ssh -i your-key.pem ubuntu@your-server-ip
-   ```
 
-3. **Install Python and dependencies**
-   
-   For Amazon Linux 2023:
+3. **Connect to server**
    ```bash
-   # Update system
+   ssh -i ~/Downloads/market-maker-key.pem ec2-user@YOUR-IP-ADDRESS
+   ```
+   (Replace YOUR-IP-ADDRESS with your server's IP)
+
+#### Step 4: Install the Bot
+
+Once connected to your server, copy and paste these commands one by one:
+
+1. **Update the system**
+   ```bash
    sudo yum update -y
-   
-   # Install Python 3 and development tools
-   sudo yum install python3 python3-pip python3-devel gcc -y
-   
-   # Install screen for background processes
-   sudo yum install screen -y
    ```
-   
-   For Ubuntu:
+   (Wait for it to complete - about 1-2 minutes)
+
+2. **Install required software**
    ```bash
-   sudo apt update
-   sudo apt install python3 python3-pip screen -y
+   sudo yum install -y python3 python3-pip git screen
    ```
 
-4. **Upload and setup the bot**
-   
-   Option A - Using SCP from your local machine:
+3. **Download the bot**
    ```bash
-   # From your local machine (not on the server)
-   scp -i your-key.pem -r dist/* ec2-user@your-server-ip:~/
-   ```
-   
-   Option B - Using wget/curl on the server:
-   ```bash
-   # On the server
-   mkdir market-maker-bot
-   cd market-maker-bot
-   
-   # Download files (if hosted somewhere)
-   # Or use SFTP client like FileZilla
+   git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
+   cd Roboquant-Crypto-Market-Maker-Bot/dist
    ```
 
-5. **Install Python dependencies**
+4. **Install Python packages**
    ```bash
-   cd market-maker-bot
-   
-   # Create virtual environment (recommended)
-   python3 -m venv venv
-   source venv/bin/activate
-   
-   # Install requirements
    pip3 install -r requirements.txt
    ```
+   (This will take 2-3 minutes)
 
-6. **Configure the bot**
+#### Step 5: Configure the Bot
+
+1. **Copy the example configuration**
    ```bash
-   # Run the configuration wizard
-   python3 config_wizard.py
-   
-   # Or copy and edit the example config
    cp config.example.json config.json
-   nano config.json  # or vim config.json
    ```
 
-7. **Run the bot in background**
+2. **Edit the configuration**
    ```bash
-   # Using screen (recommended)
+   nano config.json
+   ```
+
+3. **Update these settings:**
+   - Change `"name": "bybit"` to your exchange (binance, bybit, okx, etc.)
+   - Change `"api_key": "YOUR_API_KEY_HERE"` to your actual API key
+   - Change `"api_secret": "YOUR_API_SECRET_HERE"` to your actual API secret
+   - Change `"symbol": "ETH/USDT:USDT"` to your preferred trading pair
+   
+   **To edit in nano:**
+   - Use arrow keys to move around
+   - Delete text and type your changes
+   - Press `Ctrl+O` then `Enter` to save
+   - Press `Ctrl+X` to exit
+
+#### Step 6: Run the Bot
+
+1. **Start a screen session** (this keeps the bot running when you disconnect)
+   ```bash
    screen -S marketmaker
-   python3 market_maker_bot.py
-   
-   # Detach with Ctrl+A then D
-   # Reattach with: screen -r marketmaker
-   
-   # Alternative: Using nohup
-   nohup python3 market_maker_bot.py > bot.log 2>&1 &
    ```
 
-8. **Set up auto-start (optional)**
-   
-   For Amazon Linux with systemd:
+2. **Run the bot**
    ```bash
-   sudo nano /etc/systemd/system/marketmaker.service
+   python3 market_maker_bot.py
    ```
-   
-   Add:
-   ```ini
-   [Unit]
-   Description=Market Making Bot
-   After=network.target
-   
-   [Service]
-   Type=simple
-   User=ec2-user
-   WorkingDirectory=/home/ec2-user/market-maker-bot
-   Environment="PATH=/home/ec2-user/market-maker-bot/venv/bin"
-   ExecStart=/home/ec2-user/market-maker-bot/venv/bin/python /home/ec2-user/market-maker-bot/market_maker_bot.py
-   Restart=always
-   
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   
-   Then enable:
+
+3. **Detach from screen** (so bot keeps running)
+   - Press `Ctrl+A` then press `D`
+   - You'll see "[detached from ...]"
+
+4. **Disconnect from server**
    ```bash
-   sudo systemctl enable marketmaker
-   sudo systemctl start marketmaker
-   sudo systemctl status marketmaker
+   exit
    ```
+
+#### Step 7: Monitor Your Bot
+
+To check on your bot later:
+
+1. **Reconnect to your server** (same as Step 3)
+
+2. **Reattach to the bot**
+   ```bash
+   screen -r marketmaker
+   ```
+
+3. **To stop the bot**
+   - Press `Ctrl+C`
+
+4. **To see the log file**
+   ```bash
+   cat market_maker.log
+   ```
+
+#### Important Tips for Beginners
+
+1. **Start Small**: Test with $50-100 first
+2. **Use Conservative Settings**: In config.json, set:
+   ```json
+   "gamma": 0.5,
+   "leverage": 1,
+   "order_size_percent": 0.005
+   ```
+3. **Monitor Regularly**: Check your bot every few hours initially
+4. **Keep Your Keys Safe**: Never share your .pem file or API keys
+5. **Stop Instance When Not Using**: In AWS Console, select your instance and click "Stop instance" to save money
+
+#### Troubleshooting
+
+**"Permission denied" when connecting:**
+- Make sure you're using `ec2-user` as the username
+- Check that your .pem file has correct permissions
+
+**"Command not found":**
+- Make sure you're in the right directory: `cd ~/Roboquant-Crypto-Market-Maker-Bot/dist`
+
+**Bot won't start:**
+- Check your config.json for typos
+- Make sure your API keys are correct
+- Ensure you have funds in your exchange account
+
+**Need to edit config again:**
+```bash
+cd ~/Roboquant-Crypto-Market-Maker-Bot/dist
+nano config.json
+```
+
+#### Getting Exchange API Keys
+
+**For Binance:**
+1. Login to Binance
+2. Click profile icon → API Management
+3. Create API → System generated
+4. Enter a label like "MarketMaker"
+5. Complete verification
+6. Enable "Enable Futures" permission
+7. Save your API Key and Secret
+
+**For Bybit:**
+1. Login to Bybit
+2. Account & Security → API
+3. Create New Key
+4. Select "System-generated API Keys"
+5. Enable "Derivatives API v3" permissions
+6. Enable "Orders" and "Positions"
+7. Save your API Key and Secret
+
+#### Costs
+
+- **AWS t3.micro**: ~$8/month (or free for 12 months with free tier)
+- **To minimize costs**: Stop your instance when not trading
+- **Monitor usage**: Check AWS billing dashboard regularly
 
 ## ⚙️ Configuration
 
