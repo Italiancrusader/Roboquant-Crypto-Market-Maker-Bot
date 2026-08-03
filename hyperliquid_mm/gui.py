@@ -443,13 +443,18 @@ class BotGui:
         sv = self.status_vars
         running = self.bot_thread is not None and self.bot_thread.is_alive()
         bot = self.bot
-        if not running or bot is None:
-            sv["state"].set("stopped")
-            self.start_btn.config(state="normal")
-            self.stop_btn.config(state="disabled")
-            if bot is None and not running:
-                for key in ("mid", "spread", "position", "pnl"):
-                    pass  # keep last values visible after stop
+
+        # Buttons always reflect the thread state, every tick.
+        self.start_btn.config(state="disabled" if running else "normal")
+        self.stop_btn.config(state="normal" if running else "disabled")
+
+        if not running:
+            sv["state"].set("stopped")  # other fields keep their last values
+            return
+        if bot is None:
+            # Thread is up but the bot is still constructing (market load
+            # takes several seconds) — show progress instead of "stopped".
+            sv["state"].set("starting…")
             return
         cfg = bot.cfg
         sv["network"].set(("TESTNET" if cfg.testnet else "MAINNET")
