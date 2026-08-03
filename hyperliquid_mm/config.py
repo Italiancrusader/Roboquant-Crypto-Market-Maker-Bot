@@ -78,6 +78,10 @@ class BotConfig:
     update_interval_seconds: float
     requote_tolerance_frac: float  # fraction of half-spread the quote may drift
     min_requote_seconds: float  # per-side floor between cancel/replace cycles
+    # Trend gate: stand down (unwind-only) when the |move| over the lookback
+    # exceeds trend_gate_z times what diffusion would produce. 0 disables.
+    trend_gate_hours: float
+    trend_gate_z: float
     # risk
     max_inventory_usd: float
     session_loss_limit_usd: float
@@ -144,6 +148,8 @@ def load_config(path: str, require_keys: bool = True) -> BotConfig:
         update_interval_seconds=float(strategy.get("update_interval_seconds", 1.0)),
         requote_tolerance_frac=float(strategy.get("requote_tolerance_frac", 0.25)),
         min_requote_seconds=float(strategy.get("min_requote_seconds", 5.0)),
+        trend_gate_hours=float(strategy.get("trend_gate_hours", 0.0)),
+        trend_gate_z=float(strategy.get("trend_gate_z", 1.5)),
         max_inventory_usd=float(risk.get("max_inventory_usd", 50.0)),
         session_loss_limit_usd=float(risk.get("session_loss_limit_usd", 5.0)),
         flatten_on_exit=bool(risk.get("flatten_on_exit", True)),

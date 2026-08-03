@@ -14,7 +14,7 @@ def make_cfg(**overrides) -> BotConfig:
         vol_half_life_seconds=120.0, warmup_seconds=60.0,
         min_spread_bps=2.0, max_spread_bps=100.0,
         update_interval_seconds=1.0, requote_tolerance_frac=0.25,
-        min_requote_seconds=5.0,
+        min_requote_seconds=5.0, trend_gate_hours=0.0, trend_gate_z=1.5,
         max_inventory_usd=50.0, session_loss_limit_usd=5.0,
         flatten_on_exit=True, position_refresh_seconds=10.0,
         open_orders_refresh_seconds=5.0,

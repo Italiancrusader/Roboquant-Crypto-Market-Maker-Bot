@@ -114,6 +114,29 @@ class Quotes:
     clamped: bool  # True when the raw A-S spread hit the min/max guard
 
 
+def trend_zscore(
+    mid_now: float,
+    mid_then: float,
+    elapsed_seconds: float,
+    sigma_rel_per_sqrt_second: float,
+) -> float:
+    """How trending is the market, in diffusion units?
+
+    Returns |relative move| divided by the move a random walk with the
+    current volatility would produce over the same window. z >> 1 means a
+    directional trend; quoting symmetrically into it is adverse selection.
+    Used as a stand-down gate: research on 52 days of Hyperliquid data
+    showed wide symmetric quoting earns in chop and bleeds in trends.
+    """
+    if mid_now <= 0 or mid_then <= 0 or elapsed_seconds <= 0:
+        return 0.0
+    expected = sigma_rel_per_sqrt_second * math.sqrt(elapsed_seconds)
+    if expected <= 0:
+        return 0.0
+    move = abs(mid_now - mid_then) / mid_now
+    return move / expected
+
+
 def compute_quotes(
     mid: float,
     inventory_lots: float,

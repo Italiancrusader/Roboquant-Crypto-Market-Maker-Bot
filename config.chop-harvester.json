@@ -1,0 +1,37 @@
+{
+  "_readme": "Research-derived preset (2026-08): wide quoting + trend gate. Backtested over 52 days across BTC/ETH/SOL/HYPE/ZEC under a conservative fill model: earns in choppy regimes (~+$20/2.5wk per 5x$20 lots), controlled bleed in trends, ~breakeven overall. NOT a money printer — run small, monitor, and expect regime dependence. See README 'Backtesting'.",
+
+  "exchange": {
+    "testnet": true
+  },
+
+  "trading": {
+    "symbol": "ETH/USDC:USDC",
+    "leverage": 3,
+    "order_size": 0.01
+  },
+
+  "strategy": {
+    "gamma": 0.05,
+    "k": 1.0,
+    "horizon_seconds": 60,
+    "vol_half_life_seconds": 120,
+    "warmup_seconds": 60,
+    "min_spread_bps": 120.0,
+    "max_spread_bps": 500.0,
+    "update_interval_seconds": 1.0,
+    "requote_tolerance_frac": 0.25,
+    "min_requote_seconds": 5.0,
+    "trend_gate_hours": 24,
+    "trend_gate_z": 1.5,
+    "_comment": "min_spread_bps 120 = quotes ~60bps each side of the reservation price. trend_gate: when the 24h move exceeds 1.5x what current volatility explains, the bot quotes unwind-only until the market stops trending. gamma/k are calibrated for ETH-scale prices (~$2000); for other symbols multiply both by (1841/price)."
+  },
+
+  "risk": {
+    "max_inventory_usd": 150,
+    "session_loss_limit_usd": 10,
+    "flatten_on_exit": true,
+    "position_refresh_seconds": 10,
+    "open_orders_refresh_seconds": 5
+  }
+}

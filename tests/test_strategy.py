@@ -10,7 +10,33 @@ from hyperliquid_mm.strategy import (
     StrategyParams,
     Quotes,
     compute_quotes,
+    trend_zscore,
 )
+
+
+class TestTrendZscore:
+    def test_random_walk_scale_move_is_z1(self):
+        """A move exactly equal to sigma*sqrt(t) must score z=1."""
+        sigma = 1e-4  # relative, per sqrt-second
+        elapsed = 3600.0
+        move_frac = sigma * math.sqrt(elapsed)
+        mid_then = 2000.0
+        mid_now = mid_then / (1 - move_frac)  # so |now-then|/now == move_frac
+        z = trend_zscore(mid_now, mid_then, elapsed, sigma)
+        assert z == pytest.approx(1.0, rel=1e-9)
+
+    def test_flat_market_is_zero(self):
+        assert trend_zscore(2000.0, 2000.0, 3600.0, 1e-4) == 0.0
+
+    def test_strong_trend_scores_high(self):
+        # 5% move in an hour with tiny volatility -> huge z
+        z = trend_zscore(2100.0, 2000.0, 3600.0, 1e-5)
+        assert z > 10
+
+    def test_degenerate_inputs_are_safe(self):
+        assert trend_zscore(0.0, 2000.0, 3600.0, 1e-4) == 0.0
+        assert trend_zscore(2000.0, 2000.0, 0.0, 1e-4) == 0.0
+        assert trend_zscore(2000.0, 1990.0, 3600.0, 0.0) == 0.0
 
 
 PARAMS = StrategyParams(

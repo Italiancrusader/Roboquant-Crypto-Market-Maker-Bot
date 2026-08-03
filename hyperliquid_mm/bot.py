@@ -11,9 +11,11 @@ from typing import Dict, Optional
 
 import ccxt
 
+from collections import deque
+
 from .config import BotConfig
 from .exchange import HyperliquidClient, Position, TopOfBook
-from .strategy import EwmaVolatility, StrategyParams, compute_quotes
+from .strategy import EwmaVolatility, StrategyParams, compute_quotes, trend_zscore
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,10 @@ class MarketMakerBot:
         self._last_position_refresh = 0.0
         self._last_orders_refresh = 0.0
         self._pair_vanish_streak = 0
+        # (ts, mid) samples for the trend gate, ~15s apart spanning the window
+        self._mid_history: deque = deque()
+        self._last_mid_sample = 0.0
+        self._gated = False
         self._last_status = 0.0
         self._force_position_refresh = True
         self.halted = False
@@ -162,6 +168,8 @@ class MarketMakerBot:
         if self._risk_breached():
             return
 
+        self._update_trend_gate(mid, now)
+
         quotes = compute_quotes(
             mid=mid,
             inventory_lots=self.position.size_base / self.cfg.order_size,
@@ -184,6 +192,33 @@ class MarketMakerBot:
             self._last_status = now
 
     # ------------------------------------------------------------------
+    def _update_trend_gate(self, mid: float, now: float) -> None:
+        """Maintain the mid-history window and the trending/chop verdict."""
+        cfg = self.cfg
+        if cfg.trend_gate_hours <= 0:
+            return
+        window = cfg.trend_gate_hours * 3600.0
+        if now - self._last_mid_sample >= 15.0:
+            self._mid_history.append((now, mid))
+            self._last_mid_sample = now
+        while self._mid_history and self._mid_history[0][0] < now - window:
+            self._mid_history.popleft()
+        # need most of the window before the gate can judge
+        if not self._mid_history or now - self._mid_history[0][0] < window * 0.5:
+            return
+        then_ts, then_mid = self._mid_history[0]
+        z = trend_zscore(mid, then_mid, now - then_ts,
+                         self.vol.sigma_per_sqrt_second)
+        gated = z > cfg.trend_gate_z
+        if gated != self._gated:
+            logger.info(
+                "Trend gate %s (z=%.2f over %.1fh, threshold %.2f)",
+                "ON — unwind-only quoting" if gated else "off — resuming both sides",
+                z, cfg.trend_gate_hours, cfg.trend_gate_z,
+            )
+        self._gated = gated
+
+    # ------------------------------------------------------------------
     def _desired_orders(
         self, mid: float, bid_price: float, ask_price: float
     ) -> Dict[str, Optional[DesiredOrder]]:
@@ -195,6 +230,15 @@ class MarketMakerBot:
 
         long_capped = inv_usd >= cfg.max_inventory_usd
         short_capped = inv_usd <= -cfg.max_inventory_usd
+        # Trend gate: while trending, never ADD inventory — behave as if both
+        # caps were hit, which leaves only reduce-only unwind quoting active.
+        if self._gated:
+            long_capped = True
+            short_capped = True
+            if pos > 0:
+                short_capped = False  # allow reduce-only sell
+            elif pos < 0:
+                long_capped = False  # allow reduce-only buy
 
         # Buy side: suppressed when long inventory is at the cap. When short
         # beyond the cap it becomes the unwind side and turns reduce-only.
@@ -209,7 +253,7 @@ class MarketMakerBot:
             size = min(cfg.order_size, abs(pos)) if reduce_only else cfg.order_size
             desired["sell"] = self._make_desired(ask_price, size, reduce_only)
 
-        if long_capped or short_capped:
+        if (long_capped or short_capped) and not self._gated:
             side = "long" if long_capped else "short"
             logger.warning(
                 "Inventory cap reached (%s $%.2f >= $%.2f): quoting reduce-only unwind",

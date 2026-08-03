@@ -196,6 +196,36 @@ missing), snapshots are a few seconds apart, and queue position is still
 not modeled — a fill requires the opposite touch to trade through the
 quote.
 
+## Research findings & the chop-harvester preset
+
+A parameter study (Aug 2026; 52 days, 5 symbols, conservative fill model —
+scripts under the session archive, summary here for reproducibility):
+
+- **Symmetric A-S at tight spreads always lost** — adverse selection plus
+  3 bps round-trip fees beat sub-20 bps half-spreads on every symbol tested.
+- **Wide quoting (~60 bps/side) earns in choppy regimes** (+$33 per
+  2.5 weeks on five $20 lots, positive on 5/5 symbols) **and bleeds in
+  trending regimes** (-$63 over the prior month, negative on 5/5).
+- The paper's Bar Portion signal has **flipped sign** on current Hyperliquid
+  majors (continuation, not mean reversion) and its skew effect was
+  second-order either way.
+- A **trend gate** — stand down to unwind-only when the 24 h move exceeds
+  1.5× what current volatility explains — cut the trending-month bleed by
+  ~70 % while keeping most chop profits, bringing the 52-day total to
+  roughly breakeven under deliberately pessimistic fill assumptions.
+
+The resulting configuration ships as
+[`config.chop-harvester.json`](config.chop-harvester.json)
+(`trend_gate_hours` / `trend_gate_z` in the strategy section; `0` disables
+the gate). Honest expectations: this is a regime-dependent strategy, near
+breakeven unconditionally, positive in chop — not a money printer. The
+conservative fill model books only trade-through fills, so live results
+should skew slightly better, but validate on testnet first:
+
+```bash
+python run_bot.py --config config.chop-harvester.json
+```
+
 ## Development
 
 ```bash
