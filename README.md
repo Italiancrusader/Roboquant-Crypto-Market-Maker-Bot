@@ -177,6 +177,25 @@ alpha signal to lose small amounts in trending weeks — that is the known
 limitation of pure Avellaneda-Stoikov, and the backtester exists precisely
 so you can measure it before risking funds.
 
+### Higher fidelity: L1 replay from the Hyperliquid archive
+
+Hyperliquid publishes historical L2 book snapshots to a **requester-pays**
+S3 bucket (`s3://hyperliquid-archive/market_data/...`). With AWS
+credentials configured (`aws configure`), the backtester can replay real
+top-of-book data through the live bot's exact mechanics, including the
+requote tolerance/throttle:
+
+```bash
+python run_backtest.py --l1-date 20260629 --l1-hour 12 --l1-hours 6
+```
+
+Transfer costs bill to your AWS account (fractions of a cent per
+hour-file; parsed data is cached under `data/` so each hour is paid for
+once). Caveats: the archive is uploaded ~monthly (recent days may be
+missing), snapshots are a few seconds apart, and queue position is still
+not modeled — a fill requires the opposite touch to trade through the
+quote.
+
 ## Development
 
 ```bash

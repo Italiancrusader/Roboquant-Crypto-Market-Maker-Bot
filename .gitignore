@@ -10,3 +10,4 @@ binaries/
 *.spec
 build/
 .DS_Store
+data/

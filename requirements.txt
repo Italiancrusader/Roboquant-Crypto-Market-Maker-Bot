@@ -1,2 +1,3 @@
 ccxt>=4.5.0
 python-dotenv>=1.0.0
+lz4>=4.0.0  # decompressing Hyperliquid's historical L2 archive (backtests)

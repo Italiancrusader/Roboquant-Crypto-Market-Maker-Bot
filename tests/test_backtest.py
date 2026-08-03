@@ -140,6 +140,79 @@ class TestRiskMechanics:
             assert net == pytest.approx(0.0, abs=1e-12)
 
 
+class TestL1Replay:
+    def ticks(self, n, bid=1999.9, ask=2000.1, start=0):
+        return [((start + i) * 1000, bid, ask) for i in range(n)]
+
+    def test_flat_book_no_fills(self):
+        from hyperliquid_mm.backtest import run_l1_backtest
+        result = run_l1_backtest(make_cfg(), self.ticks(300), initial_capital=1000)
+        assert result.fills == []
+        assert result.final_equity == pytest.approx(1000.0)
+
+    def test_round_trip_on_touch_cross(self):
+        """A dip crosses our bid (buy), a recovery crosses the post-fill ask
+        (sell) — one clean round trip whose PnL is spread minus maker fees.
+
+        The moves are sized so the requote throttle (min_requote_seconds)
+        holds the post-fill ask through the recovery instead of chasing.
+        """
+        from hyperliquid_mm.backtest import run_l1_backtest
+        cfg = make_cfg()
+        ticks = self.ticks(120)                       # quotes ~2000 ± 0.95
+        ticks += [(121_000, 1998.9, 1999.0)]          # ask crosses bid -> buy
+        ticks += [(t * 1000, 1999.9, 2000.1) for t in range(122, 125)]
+        ticks += [(125_000, 2000.9, 2001.1)]          # bid crosses ask -> sell
+        ticks += self.ticks(40, start=126)
+        result = run_l1_backtest(cfg, ticks, initial_capital=1000)
+        makers = [f for f in result.fills if f.maker]
+        assert [f.side for f in makers] == ["buy", "sell"]
+        buy, sell = makers
+        assert sell.price > buy.price  # captured spread, not adverse selection
+        expected = (sell.price - buy.price) * buy.size - buy.fee - sell.fee
+        assert result.pnl == pytest.approx(expected, abs=1e-9)
+        assert result.pnl > 0
+
+    def test_no_fill_without_cross(self):
+        """The opposite touch approaching but not reaching the quote must
+        not fill (bid sits ~1 bp below mid at minimum spread)."""
+        from hyperliquid_mm.backtest import run_l1_backtest
+        cfg = make_cfg()
+        ticks = self.ticks(120)
+        ticks += [(121_000, 1999.95, 2000.05)]  # tightening, no cross
+        ticks += self.ticks(30, start=122)
+        result = run_l1_backtest(cfg, ticks, initial_capital=1000)
+        assert [f for f in result.fills if f.maker] == []
+
+    def test_loss_limit_halts_l1(self):
+        from hyperliquid_mm.backtest import run_l1_backtest
+        cfg = make_cfg(order_size=0.5, max_inventory_usd=1e9,
+                       session_loss_limit_usd=5.0)
+        ticks = self.ticks(120)
+        price = 2000.0
+        for i in range(600):
+            price -= 0.5
+            ticks.append(((121 + i) * 1000, price - 0.1, price + 0.1))
+        result = run_l1_backtest(cfg, ticks, initial_capital=1000)
+        assert result.halted_reason is not None
+
+
+class TestL1Parsing:
+    def test_parse_snapshot_formats(self):
+        from hyperliquid_mm.l1data import _parse_snapshot_line
+        modern = ('{"raw": {"channel": "l2Book", "data": {"coin": "ETH", '
+                  '"time": 1725148800123, "levels": [[{"px": "2000.1", "sz": "5", '
+                  '"n": 3}], [{"px": "2000.3", "sz": "4", "n": 2}]]}}}')
+        tick = _parse_snapshot_line(modern)
+        assert tick == (1725148800123, 2000.1, 2000.3)
+        iso = ('{"time": "2023-09-16T09:00:00.500", "raw": {"data": {'
+               '"levels": [[{"px": "1600"}], [{"px": "1600.2"}]]}}}')
+        tick = _parse_snapshot_line(iso)
+        assert tick is not None and tick[1] == 1600.0 and tick[2] == 1600.2
+        assert _parse_snapshot_line("not json") is None
+        assert _parse_snapshot_line('{"raw": {"data": {"levels": [[]]}}}') is None
+
+
 class TestMetrics:
     def test_summary_runs_and_sharpe_finite(self):
         result = run_backtest(make_cfg(), flat_bars(120), initial_capital=1000)

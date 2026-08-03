@@ -288,3 +288,148 @@ def run_backtest(
         equity_curve=equity_curve,
         halted_reason=halted,
     )
+
+
+# ----------------------------------------------------------------------
+# L1 (top-of-book) replay
+# ----------------------------------------------------------------------
+Tick = Tuple[int, float, float]  # ts_ms, best_bid, best_ask
+
+
+def run_l1_backtest(
+    cfg: BotConfig,
+    ticks: List[Tick],
+    initial_capital: float = 1_000.0,
+    maker_fee: float = MAKER_FEE,
+    taker_fee: float = TAKER_FEE,
+    equity_sample_seconds: float = 60.0,
+) -> BacktestResult:
+    """Replay top-of-book ticks through the live bot's exact mechanics.
+
+    Much higher fidelity than the candle backtest: production data cadence,
+    the live requote tolerance/min-requote throttle, and the vol estimator
+    fed real mid updates. Fill rule: a resting bid fills when the best ask
+    drops to or below it (marketable flow traded through our level); the
+    mirror for asks. Queue position is still not modeled — fills at the
+    exact touch remain unknowable — so results stay conservative-leaning
+    but much closer to live behaviour than candles.
+    """
+    if len(ticks) < 100:
+        raise ValueError("Not enough ticks to backtest")
+
+    params = StrategyParams(
+        gamma=cfg.gamma, k=cfg.k, horizon_seconds=cfg.horizon_seconds,
+        min_spread_bps=cfg.min_spread_bps, max_spread_bps=cfg.max_spread_bps,
+    )
+    vol = EwmaVolatility(cfg.vol_half_life_seconds)
+
+    cash, inv = initial_capital, 0.0
+    fills: List[Fill] = []
+    equity_curve: List[Tuple[int, float]] = []
+    halted: Optional[str] = None
+    resting = {"buy": None, "sell": None}  # side -> (price, size, placed_ts_s)
+    last_equity_sample = 0.0
+
+    for ts_ms, best_bid, best_ask in ticks:
+        if best_bid <= 0 or best_ask <= 0 or best_ask <= best_bid:
+            continue
+        now_s = ts_ms / 1000.0
+        mid = (best_bid + best_ask) / 2.0
+
+        # 1) fills: opposite touch crossing our resting level
+        rb = resting["buy"]
+        if rb is not None and best_ask <= rb[0]:
+            px, sz, _ = rb
+            fee = px * sz * maker_fee
+            cash -= px * sz + fee
+            inv += sz
+            fills.append(Fill(ts_ms, "buy", px, sz, fee, maker=True))
+            resting["buy"] = None
+        ra = resting["sell"]
+        if ra is not None and best_bid >= ra[0]:
+            px, sz, _ = ra
+            fee = px * sz * maker_fee
+            cash += px * sz - fee
+            inv -= sz
+            fills.append(Fill(ts_ms, "sell", px, sz, fee, maker=True))
+            resting["sell"] = None
+
+        # 2) equity + loss limit (sampled to keep the curve small)
+        equity = cash + inv * mid
+        if now_s - last_equity_sample >= equity_sample_seconds:
+            equity_curve.append((ts_ms, equity))
+            last_equity_sample = now_s
+        if equity - initial_capital <= -cfg.session_loss_limit_usd:
+            fee = abs(inv) * mid * taker_fee
+            if inv != 0:
+                cash += inv * mid - fee
+                fills.append(Fill(ts_ms, "sell" if inv > 0 else "buy",
+                                  mid, abs(inv), fee, maker=False))
+                inv = 0.0
+            halted = "session loss limit breached (flattened)"
+            equity_curve.append((ts_ms, cash))
+            break
+
+        # 3) vol + quotes with the live requote throttle
+        vol.update(mid, now_s)
+        if not vol.is_warm(cfg.warmup_seconds):
+            continue
+
+        q = compute_quotes(mid, inv / cfg.order_size,
+                           vol.variance_per_second, params)
+        bid_px = min(q.bid, best_ask * (1 - 1e-6))
+        ask_px = max(q.ask, best_bid * (1 + 1e-6))
+        half = q.total_spread / 2.0
+        tol = cfg.requote_tolerance_frac * half
+
+        inv_usd = inv * mid
+        long_capped = inv_usd >= cfg.max_inventory_usd
+        short_capped = inv_usd <= -cfg.max_inventory_usd
+
+        for side, want_px, capped, other_capped in (
+            ("buy", bid_px, long_capped, short_capped),
+            ("sell", ask_px, short_capped, long_capped),
+        ):
+            if capped:
+                resting[side] = None
+                continue
+            size = min(cfg.order_size, abs(inv)) if other_capped else cfg.order_size
+            if size <= 0 or size * want_px < 10.0:
+                resting[side] = None
+                continue
+            have = resting[side]
+            if have is not None:
+                drifted = abs(have[0] - want_px) > tol
+                too_soon = now_s - have[2] < cfg.min_requote_seconds
+                if not drifted or too_soon:
+                    continue
+            resting[side] = (want_px, size, now_s)
+
+        # crossing guard mirrors live: never rest through the touch
+        if resting["buy"] is not None and resting["buy"][0] >= best_ask:
+            resting["buy"] = None
+        if resting["sell"] is not None and resting["sell"][0] <= best_bid:
+            resting["sell"] = None
+
+    if halted is None:
+        ts_ms = ticks[-1][0]
+        mid = (ticks[-1][1] + ticks[-1][2]) / 2.0
+        if inv != 0:
+            fee = abs(inv) * mid * taker_fee
+            cash += inv * mid - fee
+            fills.append(Fill(ts_ms, "sell" if inv > 0 else "buy",
+                              mid, abs(inv), fee, maker=False))
+            inv = 0.0
+        equity_curve.append((ts_ms, cash))
+
+    return BacktestResult(
+        symbol=cfg.symbol,
+        timeframe="L1",
+        start_ms=ticks[0][0],
+        end_ms=ticks[-1][0],
+        initial_capital=initial_capital,
+        final_equity=equity_curve[-1][1] if equity_curve else initial_capital,
+        fills=fills,
+        equity_curve=equity_curve,
+        halted_reason=halted,
+    )

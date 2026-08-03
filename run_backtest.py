@@ -27,6 +27,13 @@ def main() -> int:
     parser.add_argument("--testnet-data", action="store_true",
                         help="use testnet candles (default: mainnet — better data)")
     parser.add_argument("--csv", default=None, help="write equity curve to CSV")
+    parser.add_argument("--l1-date", default=None, metavar="YYYYMMDD",
+                        help="L1 replay from the S3 archive instead of candles "
+                             "(requires AWS credentials; requester-pays)")
+    parser.add_argument("--l1-hour", type=int, default=0,
+                        help="first hour (UTC) for --l1-date (default 0)")
+    parser.add_argument("--l1-hours", type=int, default=1,
+                        help="number of hours to replay (default 1)")
     args = parser.parse_args()
 
     try:
@@ -38,19 +45,36 @@ def main() -> int:
     if args.symbol:
         cfg = type(cfg)(**{**cfg.__dict__, "symbol": args.symbol})
 
-    print(f"Fetching {args.days:g} days of {args.timeframe} candles for {symbol}...")
-    candles = fetch_candles(symbol, args.timeframe, args.days,
-                            testnet=args.testnet_data)
-    print(f"Got {len(candles)} candles. Running backtest...")
-
-    result = run_backtest(cfg, candles, initial_capital=args.capital)
-    result.timeframe = args.timeframe
-    print()
-    print(result.summary())
-    print()
-    print("Note: candle-level simulation is an approximation of the live "
-          "1-second loop.\nFills are conservative (strict price cross, no "
-          "queue modeling); treat results\nas indicative, not predictive.")
+    if args.l1_date:
+        from hyperliquid_mm.backtest import run_l1_backtest
+        from hyperliquid_mm.l1data import fetch_l1_range
+        coin = symbol.split("/")[0]
+        print(f"Fetching L1 archive data: {coin} {args.l1_date} "
+              f"hours {args.l1_hour}-{args.l1_hour + args.l1_hours - 1} "
+              f"(requester-pays S3)...")
+        ticks = fetch_l1_range(coin, args.l1_date, args.l1_hour, args.l1_hours)
+        print(f"Got {len(ticks)} book snapshots. Running L1 replay...")
+        result = run_l1_backtest(cfg, ticks, initial_capital=args.capital)
+        print()
+        print(result.summary())
+        print()
+        print("Note: L1 replay uses production data cadence and the live "
+              "requote throttle.\nQueue position is still not modeled; "
+              "fills require the opposite touch to cross\nthe quote, so "
+              "results remain conservative-leaning.")
+    else:
+        print(f"Fetching {args.days:g} days of {args.timeframe} candles for {symbol}...")
+        candles = fetch_candles(symbol, args.timeframe, args.days,
+                                testnet=args.testnet_data)
+        print(f"Got {len(candles)} candles. Running backtest...")
+        result = run_backtest(cfg, candles, initial_capital=args.capital)
+        result.timeframe = args.timeframe
+        print()
+        print(result.summary())
+        print()
+        print("Note: candle-level simulation is an approximation of the live "
+              "1-second loop.\nFills are conservative (strict price cross, no "
+              "queue modeling); treat results\nas indicative, not predictive.")
 
     if args.csv:
         with open(args.csv, "w") as f:
