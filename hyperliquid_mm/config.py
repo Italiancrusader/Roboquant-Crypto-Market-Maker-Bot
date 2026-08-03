@@ -40,6 +40,8 @@ DEFAULT_CONFIG = {
         "update_interval_seconds": 1.0,
         "requote_tolerance_frac": 0.25,
         "min_requote_seconds": 5.0,
+        "trend_gate_hours": 0.0,
+        "trend_gate_z": 1.5,
     },
     "risk": {
         "max_inventory_usd": 50,
@@ -107,7 +109,10 @@ def load_config(path: str, require_keys: bool = True) -> BotConfig:
         )
     except json.JSONDecodeError as e:
         raise ConfigError(f"Config file {path} is not valid JSON: {e}")
+    return config_from_raw(raw, require_keys=require_keys)
 
+
+def config_from_raw(raw: dict, require_keys: bool = True) -> BotConfig:
     exchange = raw.get("exchange", {})
     trading = raw.get("trading", {})
     strategy = raw.get("strategy", {})

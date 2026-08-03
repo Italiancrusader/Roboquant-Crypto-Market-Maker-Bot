@@ -22,6 +22,8 @@
     "update_interval_seconds": 1.0,
     "requote_tolerance_frac": 0.25,
     "min_requote_seconds": 5.0,
+    "trend_gate_hours": 0.0,
+    "trend_gate_z": 1.5,
     "_comment": "gamma and k are in 1/USD (see hyperliquid_mm/strategy.py for the units convention). Higher gamma = wider spread and stronger inventory aversion. min_requote_seconds limits cancel/replace churn, which Hyperliquid meters per address."
   },
 

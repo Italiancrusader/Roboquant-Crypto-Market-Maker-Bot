@@ -35,6 +35,7 @@ REFRESH_MS = 250
 STATUS_FIELDS = [
     ("network", "Network"),
     ("state", "State"),
+    ("regime", "Regime"),
     ("mid", "Mid price"),
     ("spread", "Spread"),
     ("position", "Position"),
@@ -48,9 +49,37 @@ EDITABLE = [
     ("trading", "leverage", "Leverage", int),
     ("strategy", "gamma", "Gamma (risk aversion)", float),
     ("strategy", "k", "k (book intensity)", float),
+    ("strategy", "min_spread_bps", "Spread floor (bps)", float),
+    ("strategy", "max_spread_bps", "Spread cap (bps)", float),
+    ("strategy", "trend_gate_hours", "Trend gate lookback (h)", float),
+    ("strategy", "trend_gate_z", "Trend gate sensitivity", float),
     ("risk", "max_inventory_usd", "Max inventory (USD)", float),
     ("risk", "session_loss_limit_usd", "Session loss limit (USD)", float),
 ]
+
+# Research-derived preset (Aug 2026 study — see README "Research findings").
+# gamma/k are ETH-price calibrated; applying to another symbol rescales them.
+PRESET_REF_PRICE = 1841.0
+CHOP_HARVESTER = {
+    ("trading", "leverage"): 3,
+    ("strategy", "gamma"): 0.05,
+    ("strategy", "k"): 1.0,
+    ("strategy", "min_spread_bps"): 120.0,
+    ("strategy", "max_spread_bps"): 500.0,
+    ("strategy", "trend_gate_hours"): 24.0,
+    ("strategy", "trend_gate_z"): 1.5,
+    ("risk", "max_inventory_usd"): 150.0,
+    ("risk", "session_loss_limit_usd"): 10.0,
+}
+
+
+def lot_for(price: float) -> float:
+    """~$20 notional rounded to a clean step (mirrors run_select.py)."""
+    raw = 20.0 / price
+    for step in (1000, 100, 10, 1, 0.1, 0.01, 0.001, 0.0001, 0.00001):
+        if raw >= step:
+            return max(round(raw / step) * step, step)
+    return raw
 
 
 class QueueLogHandler(logging.Handler):
@@ -91,7 +120,7 @@ class BotGui:
 
         self.root = tk.Tk()
         self.root.title("Hyperliquid A-S Market Maker")
-        self.root.geometry("880x640")
+        self.root.geometry("920x760")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._build_layout()
         self._load_config_into_form()
@@ -112,9 +141,20 @@ class BotGui:
         left.grid(row=0, column=0, rowspan=2, sticky="nsw")
 
         ttk.Label(left, text="Settings", font=("", 13, "bold")).grid(
-            row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 2))
+        ttk.Label(
+            left, foreground="gray", wraplength=230, justify="left",
+            text="1. Apply preset   2. Scan markets & pick one\n"
+                 "3. Save credentials   4. Start bot",
+        ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 6))
 
-        r = 1
+        r = 2
+        ttk.Button(left, text="Apply Chop-Harvester preset",
+                   command=self._apply_preset).grid(
+            row=r, column=0, columnspan=2, sticky="we", pady=(0, 2)); r += 1
+        self.scan_btn = ttk.Button(left, text="🔎  Scan markets (2–4 min)",
+                                   command=self._scan_markets)
+        self.scan_btn.grid(row=r, column=0, columnspan=2, sticky="we", pady=(0, 6)); r += 1
         # Symbol: dropdown fetched live from Hyperliquid (editable as fallback)
         ttk.Label(left, text="Symbol").grid(row=r, column=0, sticky="w", pady=2)
         self.symbol_var = tk.StringVar()
@@ -234,6 +274,135 @@ class BotGui:
         self._refresh_credentials_banner()
         logging.getLogger(__name__).info("Settings saved to %s", self.config_path)
         return True
+
+    # ------------------------------------------------------------- preset
+    def _apply_preset(self, price: Optional[float] = None) -> None:
+        """Fill the form with the researched chop-harvester configuration.
+
+        gamma/k are ETH-calibrated (1/USD units); when a price is known the
+        values are rescaled so the quoted spread is price-independent.
+        """
+        scale = PRESET_REF_PRICE / price if price else 1.0
+        for (section, key), value in CHOP_HARVESTER.items():
+            if key in ("gamma", "k"):
+                value = round(value * scale, 8)
+            var = self.form_vars.get((section, key))
+            if var is not None:
+                var.set(str(value))
+        if price:
+            self.form_vars[("trading", "order_size")].set(str(lot_for(price)))
+        logging.getLogger(__name__).info(
+            "Applied chop-harvester preset (wide quotes + 24h trend gate). "
+            "Review, Save settings, then Start.")
+
+    # ------------------------------------------------------- market scan
+    def _scan_markets(self) -> None:
+        """Walk-forward market selection, in-app: backtest the preset on the
+        top-volume markets and let the user pick from the ranked results."""
+        self.scan_btn.config(state="disabled", text="Scanning… see log")
+        log = logging.getLogger(__name__)
+
+        def scan() -> None:
+            results = []
+            try:
+                import time as _time
+                import dataclasses
+                import ccxt
+                from .backtest import fetch_candles, run_backtest
+                from .config import DEFAULT_CONFIG, config_from_raw
+
+                ex = ccxt.hyperliquid({"enableRateLimit": True})
+                ctx = ex.publicPostInfo({"type": "metaAndAssetCtxs"})
+                universe = []
+                for m, a in zip(ctx[0]["universe"], ctx[1]):
+                    if m.get("isDelisted"):
+                        continue
+                    vlm = float(a.get("dayNtlVlm", 0))
+                    px = float(a.get("markPx", 0) or 0)
+                    if vlm >= 1_000_000 and px > 0:
+                        universe.append((m["name"], vlm))
+                universe.sort(key=lambda r: -r[1])
+                universe = universe[:25]
+                log.info("Market scan: backtesting %d markets (~2-4 min)…",
+                         len(universe))
+
+                base = config_from_raw(DEFAULT_CONFIG, require_keys=False)
+                for i, (coin, vlm) in enumerate(universe):
+                    try:
+                        candles = fetch_candles(f"{coin}/USDC:USDC", "5m", 18.0)
+                        _time.sleep(0.6)
+                        if len(candles) < 2000:
+                            continue
+                        price = candles[-1][4]
+                        scale = PRESET_REF_PRICE / price
+                        cfg = dataclasses.replace(
+                            base, symbol=f"{coin}/USDC:USDC",
+                            order_size=lot_for(price),
+                            gamma=0.05 * scale, k=1.0 * scale,
+                            min_spread_bps=120.0, max_spread_bps=500.0,
+                            trend_gate_hours=24.0, trend_gate_z=1.5,
+                            max_inventory_usd=150.0,
+                            session_loss_limit_usd=1e18)
+                        r = run_backtest(cfg, candles)
+                        results.append((r.pnl, coin, price, len(r.fills),
+                                        r.max_drawdown, vlm))
+                        log.info("  scan %d/%d  %s: $%+.2f (%d fills)",
+                                 i + 1, len(universe), coin, r.pnl, len(r.fills))
+                    except Exception as e:
+                        log.warning("  scan %s failed: %s", coin, str(e)[:80])
+                results.sort(reverse=True)
+            except Exception as e:
+                log.error("Market scan failed: %s", e)
+            def done() -> None:
+                self.scan_btn.config(state="normal",
+                                     text="🔎  Scan markets (2–4 min)")
+                if results:
+                    self._show_scan_results(results)
+            try:
+                self.root.after(0, done)
+            except tk.TclError:
+                pass
+
+        threading.Thread(target=scan, daemon=True, name="market-scan").start()
+
+    def _show_scan_results(self, results) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Market scan — 18-day backtest with the preset")
+        win.geometry("560x420")
+        ttk.Label(win, text="Positive recent PnL was the walk-forward-validated "
+                            "selector.\nDouble-click a market to configure the "
+                            "bot for it.", justify="left").pack(
+            anchor="w", padx=10, pady=8)
+        cols = ("market", "pnl", "fills", "maxdd", "volume")
+        tree = ttk.Treeview(win, columns=cols, show="headings", height=14)
+        for col, txt, w in (("market", "Market", 100), ("pnl", "18d PnL", 90),
+                            ("fills", "Fills", 70), ("maxdd", "Max DD", 80),
+                            ("volume", "Volume/day", 110)):
+            tree.heading(col, text=txt)
+            tree.column(col, width=w, anchor="e" if col != "market" else "w")
+        by_iid = {}
+        for pnl, coin, price, fills, dd, vlm in results:
+            iid = tree.insert("", "end", values=(
+                coin, f"${pnl:+.2f}", fills, f"{dd * 100:.2f}%",
+                f"${vlm / 1e6:.1f}M"))
+            by_iid[iid] = (coin, price)
+        tree.pack(fill="both", expand=True, padx=10)
+
+        def apply(_event=None) -> None:
+            sel = tree.selection()
+            if not sel:
+                return
+            coin, price = by_iid[sel[0]]
+            self.symbol_var.set(f"{coin}/USDC:USDC")
+            self._apply_preset(price=price)
+            self._save_config()
+            logging.getLogger(__name__).info(
+                "Configured for %s (preset scaled to price $%s). "
+                "Start the bot when ready.", coin, price)
+            win.destroy()
+
+        tree.bind("<Double-1>", apply)
+        ttk.Button(win, text="Use selected market", command=apply).pack(pady=8)
 
     # -------------------------------------------------------- credentials
     def _cred_env_names(self) -> tuple:
@@ -460,6 +629,12 @@ class BotGui:
         sv["network"].set(("TESTNET" if cfg.testnet else "MAINNET")
                           + (" · dry-run" if bot.dry_run else ""))
         sv["state"].set("halted: " + bot.halt_reason if bot.halted else "running")
+        if cfg.trend_gate_hours <= 0:
+            sv["regime"].set("gate off")
+        elif bot._gated:
+            sv["regime"].set("TRENDING — standing down")
+        else:
+            sv["regime"].set("chop — quoting")
         vol = bot.vol
         if vol.sample_count and vol._last_mid:
             sv["mid"].set(f"{vol._last_mid:,.2f}")
