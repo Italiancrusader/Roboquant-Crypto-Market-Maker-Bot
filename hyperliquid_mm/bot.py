@@ -64,6 +64,10 @@ class MarketMakerBot:
         self._mid_history: deque = deque()
         self._last_mid_sample = 0.0
         self._gated = False
+        # fill markout measurement: the decisive adverse-selection metric.
+        # Each entry: dict(ts, side, px, done_10s, done_60s)
+        self._pending_markouts: deque = deque()
+        self._markout_path = "markouts.csv"
         self._last_status = 0.0
         self._force_position_refresh = True
         self.halted = False
@@ -169,6 +173,7 @@ class MarketMakerBot:
             return
 
         self._update_trend_gate(mid, now)
+        self._record_markouts(mid, now)
 
         quotes = compute_quotes(
             mid=mid,
@@ -217,6 +222,40 @@ class MarketMakerBot:
                 z, cfg.trend_gate_hours, cfg.trend_gate_z,
             )
         self._gated = gated
+
+    # ------------------------------------------------------------------
+    def _record_markouts(self, mid: float, now: float) -> None:
+        """Log where the mid stands 10s and 60s after each fill.
+
+        Markout (in bps, sign-adjusted so + = we were on the right side) is
+        THE measure of adverse selection: average markout + half-spread
+        captured - fees is the true per-fill economics. Written to
+        markouts.csv for offline analysis.
+        """
+        if not self._pending_markouts:
+            return
+        for m in list(self._pending_markouts):
+            age = now - m["ts"]
+            sign = 1.0 if m["side"] == "buy" else -1.0
+            for horizon, key in ((10.0, "done_10s"), (60.0, "done_60s")):
+                if age >= horizon and not m[key]:
+                    m[key] = True
+                    bps = sign * (mid - m["px"]) / m["px"] * 1e4
+                    try:
+                        import os
+                        write_header = not os.path.exists(self._markout_path)
+                        with open(self._markout_path, "a") as f:
+                            if write_header:
+                                f.write("ts,side,fill_px,horizon_s,markout_bps\n")
+                            f.write(f"{m['ts']:.0f},{m['side']},{m['px']},"
+                                    f"{horizon:.0f},{bps:.3f}\n")
+                    except OSError:
+                        pass
+                    if horizon == 60.0:
+                        logger.info("Markout 60s after %s @ %s: %+.1f bps",
+                                    m["side"], m["px"], bps)
+            if m["done_60s"]:
+                self._pending_markouts.remove(m)
 
     # ------------------------------------------------------------------
     def _desired_orders(
@@ -323,6 +362,10 @@ class MarketMakerBot:
             have = self.resting[side]
             if have is not None and have.id not in open_ids:
                 logger.info("%s order %s no longer open — filled or cancelled", side, have.id)
+                self._pending_markouts.append(dict(
+                    ts=now, side=side, px=have.price,
+                    done_10s=False, done_60s=False,
+                ))
                 self.resting[side] = None
                 self._force_position_refresh = True
                 vanished += 1
