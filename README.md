@@ -1,230 +1,187 @@
-<div align="center">
-  <img src="dist/Asset 3.svg" alt="Roboquant Logo" width="200"/>
-  
-  # Roboquant Universal Market Making Bot
-  
-  **Professional Cryptocurrency Trading Solutions**
-  
-  [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-  [![Exchanges](https://img.shields.io/badge/Exchanges-11+-orange.svg)](#supported-exchanges)
-  [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux%20%7C%20AWS-lightgrey.svg)](#installation)
-  
-  *Advanced market making bot using the Avellaneda-Stoikov strategy*
-  
-  [🚀 Quick Start](#quick-start) • [📖 Documentation](#documentation) • [⚙️ Configuration](#configuration) • [🛡️ Safety](#safety-guidelines)
-</div>
+# Hyperliquid Avellaneda-Stoikov Market Maker
 
----
+A market making bot for **Hyperliquid perpetuals** implementing the
+**Avellaneda-Stoikov (2008)** model with consistent units, exchange-sourced
+position tracking, and real risk controls.
 
-## 🌟 Features
+> ⚠️ Market making with leverage can lose money quickly. Run `--dry-run`
+> first, then testnet, and only then mainnet with small size. See
+> [Safety](#safety).
 
-- **🤖 Automated Market Making** - Professional Avellaneda-Stoikov strategy implementation
-- **🏦 Multi-Exchange Support** - Works with 11+ major cryptocurrency exchanges
-- **⚡ Easy Setup** - One-click launchers for Windows, Mac, and Linux
-- **☁️ Cloud Ready** - AWS deployment scripts included
-- **🎯 Risk Management** - Built-in stop losses and position limits
-- **📊 Real-time Monitoring** - Live P&L tracking and performance metrics
-- **🔧 GUI Configuration** - User-friendly setup wizard
-- **📱 Cross-Platform** - Runs on Windows, Mac, Linux, and cloud servers
+## Strategy
 
-## 🏦 Supported Exchanges
+The bot quotes a bid and ask around a *reservation price* that leans against
+current inventory:
 
-<div align="center">
-
-| Exchange | Status | Futures | Testnet |
-|----------|--------|---------|---------|
-| **Binance** | ✅ | ✅ | ✅ |
-| **Bybit** | ✅ | ✅ | ✅ |
-| **OKX** | ✅ | ✅ | ✅ |
-| **KuCoin** | ✅ | ✅ | ❌ |
-| **Gate.io** | ✅ | ✅ | ✅ |
-| **MEXC** | ✅ | ✅ | ❌ |
-| **Bitget** | ✅ | ✅ | ✅ |
-| **Hyperliquid** | ✅ | ✅ | ✅ |
-| **Phemex** | ✅ | ✅ | ✅ |
-| **Huobi** | ✅ | ✅ | ❌ |
-| **Kraken** | ✅ | ✅ | ❌ |
-
-</div>
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8 or higher
-- Exchange account with API access
-- Some USDT/USD in your futures account
-
-### Installation
-
-#### Windows
-```cmd
-# Download and extract the repository
-# Navigate to the dist folder
-cd dist
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure the bot
-configure_bot.bat
-
-# Start trading
-start_bot.bat
+```
+reservation price   r = s − q·γ·σ²·τ
+optimal spread      δ = γ·σ²·τ + (2/γ)·ln(1 + γ/k)
 ```
 
-#### Mac/Linux
+- `s` — mid price; `σ²` — EWMA variance of log returns, measured per second
+  from real timestamps (robust to irregular sampling) and converted to price
+  units.
+- `q` — signed inventory in **lots** (multiples of your order size), so one
+  lot of inventory skews the reservation price by exactly the risk term
+  `γ·σ²·τ`. Long inventory pushes both quotes down (leaning to sell); short
+  pushes them up.
+- `τ` — a fixed rolling horizon (default 60 s). For a 24/7 perpetual market
+  the stationary approximation is used rather than the original model's
+  terminal-time countdown.
+- `γ`, `k` are in 1/USD so every term is in dollars; with the default
+  parameters the raw A-S spread lands *inside* the min/max guard band, and the
+  status line reports whenever it gets clamped.
+
+Orders are **post-only (ALO)** — the bot never pays taker fees; a quote that
+would cross the book is simply skipped that cycle. Orders are cancelled and
+replaced only when the target price drifts beyond a tolerance
+(`requote_tolerance_frac` of the half-spread), which preserves queue priority
+and respects Hyperliquid's per-address action budget.
+
+## Risk controls
+
+| Control | Behaviour |
+|---|---|
+| `max_inventory_usd` | At the cap the bot stops adding and quotes **reduce-only** on the unwind side (it never goes silent while holding a position). |
+| `session_loss_limit_usd` | If account equity drops this much below the session start, the bot **flattens the position and halts**. |
+| Position truth | Read from `fetch_positions` on the exchange — never inferred by accumulating trades. Restarts are safe. |
+| Startup / shutdown | Cancels all resting orders on start (clean slate), on Ctrl-C, and on SIGTERM (systemd/docker friendly). Optional `flatten_on_exit`. |
+| Error handling | Backoff on network errors; halts after 10 consecutive loop errors or on authentication failure — always through the cleanup path. |
+
+## Quick start
+
+**Want a desktop app?** Download `HyperliquidMM` for your OS from the
+[Releases page](../../releases) (macOS `.app` / Windows `.exe`) — a control
+panel with settings, start/stop buttons, live status, and logs. Put it in a
+folder of its own; it creates `config.json` there and reads `.env` from the
+same folder. Or run it from source with `python run_gui.py`.
+
+**Prefer the terminal?** Use the standalone CLI executable. Download the
+binary for your OS from the [Releases page](../../releases) (or build both
+with `./build_executable.sh`), put it in an empty folder, and run it:
+
 ```bash
-# Clone the repository
+./hyperliquid-mm            # first run creates config.json with safe defaults
+./hyperliquid-mm --dry-run  # quote against live data, no credentials needed
+```
+
+Add `HL_WALLET_ADDRESS` / `HL_PRIVATE_KEY` to a `.env` file next to the binary
+(see [.env.example](.env.example)) and run again to trade. Executables are
+per-platform; tagging a release (`git tag v1.x && git push --tags`) builds
+Linux, macOS, and Windows binaries via GitHub Actions.
+
+**With Python** — requires Python 3.9+.
+
+```bash
 git clone https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot.git
-cd Roboquant-Crypto-Market-Maker-Bot/dist
-
-# Install dependencies
-pip3 install -r requirements.txt
-
-# Configure the bot
-cp config.example.json config.json
-nano config.json
-
-# Start trading
-./start_bot.sh
+cd Roboquant-Crypto-Market-Maker-Bot
+./start_bot.sh --dry-run     # Mac/Linux — or start_bot.bat on Windows
 ```
 
-#### AWS/Cloud
+The launcher creates a virtualenv, installs dependencies, and generates
+`config.json` and `.env` from their examples on first run. Prefer manual setup?
+
 ```bash
-# Use our automated setup script
-wget https://raw.githubusercontent.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot/master/dist/setup_aws.sh
-chmod +x setup_aws.sh
-./setup_aws.sh
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp config.example.json config.json     # edit to taste; testnet is the default
 ```
 
-## ⚙️ Configuration
+**1. Dry run (no account needed).** Computes and logs quotes against live
+market data without placing any orders:
 
-### Strategy Profiles
+```bash
+python run_bot.py --dry-run
+```
 
-| Profile | Risk Level | Best For | Leverage | Order Size |
-|---------|-----------|----------|----------|------------|
-| **🟢 Conservative** | Low | Beginners | 1-2x | 0.5% |
-| **🟡 Balanced** | Medium | Most Users | 3-5x | 1.0% |
-| **🔴 Aggressive** | High | Experienced | 5-10x | 2.0% |
+**2. Testnet.** Create a wallet on <https://app.hyperliquid-testnet.xyz>,
+claim mock USDC, create an API wallet, then:
 
-### Key Parameters
+```bash
+cp .env.example .env    # fill in HL_WALLET_ADDRESS and HL_PRIVATE_KEY
+python run_bot.py
+```
 
-- **`gamma`** - Risk aversion (0.01-1.0, lower = more aggressive)
-- **`leverage`** - Position leverage (1-20x)
-- **`order_size_percent`** - Order size as % of balance
-- **`update_frequency`** - Quote update frequency in seconds
-- **`max_inventory_usd`** - Maximum inventory in USD
-- **`stop_loss_percent`** - Stop loss threshold
+**3. Mainnet.** Set `"testnet": false` in `config.json`. The bot asks for
+explicit confirmation before trading real funds.
 
-## 📊 Performance
+Credentials are read **only** from the environment (or a `.env` file, which is
+git-ignored) — never from `config.json`. Use a dedicated
+[API wallet](https://app.hyperliquid.xyz/API) so the key cannot withdraw funds.
 
-The bot implements the **Avellaneda-Stoikov market making strategy**, which:
+## Configuration
 
-- ✅ Dynamically adjusts spreads based on market volatility
-- ✅ Manages inventory risk through optimal quote placement
-- ✅ Adapts to market conditions in real-time
-- ✅ Minimizes adverse selection costs
+All keys live in `config.json` (see `config.example.json` for the annotated
+defaults).
 
-## 📖 Documentation
+| Key | Default | Meaning |
+|---|---|---|
+| `trading.symbol` | `ETH/USDC:USDC` | Any Hyperliquid perpetual (ccxt symbol format). |
+| `trading.order_size` | `0.01` | Quote size in base units = one inventory "lot". Notional must exceed Hyperliquid's $10 minimum. |
+| `trading.leverage` | `3` | Isolated leverage set at startup. |
+| `strategy.gamma` | `0.1` | Risk aversion (1/USD). Higher → wider spread, stronger inventory skew. |
+| `strategy.k` | `1.0` | Order-book intensity decay (1/USD). Higher → tighter spread. |
+| `strategy.horizon_seconds` | `60` | Rolling horizon τ. |
+| `strategy.vol_half_life_seconds` | `120` | EWMA half-life of the volatility estimator. |
+| `strategy.warmup_seconds` | `60` | No quoting until the vol estimate has this much data. |
+| `strategy.min/max_spread_bps` | `2 / 100` | Guard band on the total spread; clamping is logged. |
+| `strategy.requote_tolerance_frac` | `0.25` | Fraction of the half-spread the quote may drift before cancel/replace. |
+| `strategy.min_requote_seconds` | `5` | Per-side floor between replacements (protects queue position and action budget). |
+| `risk.max_inventory_usd` | `200` | Inventory cap (see table above). |
+| `risk.session_loss_limit_usd` | `25` | Flatten-and-halt threshold. |
+| `risk.flatten_on_exit` | `false` | Also market-close the position on any shutdown. |
 
-- **[📋 Complete Setup Guide](dist/COMPLETE_SETUP_GUIDE.md)** - Detailed installation instructions
-- **[🌐 Interactive HTML Guide](dist/setup_guide.html)** - Visual setup guide
-- **[📁 Files Overview](dist/FILES_INCLUDED.txt)** - Package contents
-- **[⚖️ License](dist/LICENSE)** - MIT License
+## Repo layout
 
-## 🛡️ Safety Guidelines
+```
+run_bot.py               CLI entry point (--config, --dry-run)
+run_gui.py               desktop control panel entry point
+hyperliquid_mm/
+  strategy.py            A-S math + volatility estimator (pure, unit-tested)
+  exchange.py            ccxt Hyperliquid wrapper (all I/O isolated here)
+  bot.py                 main loop, order management, risk engine
+  config.py              config loading/validation; secrets from env only
+  gui.py                 tkinter control panel (settings, credentials, logs)
+tests/test_strategy.py   unit tests — run: python -m pytest tests/
+assets/                  app icons (Roboquant logo)
+build_executable.sh      local binary/app build (PyInstaller)
+.github/workflows/       CI: tests + Linux/macOS/Windows executables
+legacy/                  ⚠️ previous-generation bots — deprecated, do not run
+```
 
-> **⚠️ Important**: Cryptocurrency trading carries significant risks. You can lose money.
+## Development
 
-### For Beginners
-1. **Start Small** - Test with $50-100
-2. **Use Conservative Settings** - Low leverage, small position sizes
-3. **Monitor Closely** - Check the bot regularly
-4. **Set Stop Losses** - Always use risk management
-5. **Understand the Strategy** - Learn about market making
+```bash
+pip install -e ".[dev]"
+python -m pytest tests/ -v
+```
 
-### Risk Management
-- Set appropriate `max_inventory_usd` limits
-- Use `stop_loss_percent` for downside protection
-- Configure `daily_loss_limit_usd`
-- Start with low or no leverage
-- Never risk more than you can afford to lose
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Security
-- 🔐 Never share API keys
-- 🌐 Use IP restrictions when possible
-- 👀 Monitor your exchange account regularly
-- 🔒 Keep your server/computer secure
+## Legacy code
 
-## 🚀 Getting Started
+Everything under [`legacy/`](legacy/) is the previous generation of this
+repo. An audit found critical defects (broken A-S units that made the strategy
+a constant-spread quoter, ~10-300× double-counted inventory, advertised risk
+controls that were never implemented, and a hard crash on import with current
+ccxt). It is kept for reference only — **do not trade with it**. Details in
+[legacy/README.md](legacy/README.md).
 
-1. **Choose Your Platform**
-   - [Windows Setup](#windows) - Double-click installers
-   - [Mac/Linux Setup](#maclinux) - Terminal commands
-   - [AWS Cloud Setup](#awscloud) - Automated scripts
+## Safety
 
-2. **Get API Keys**
-   - Create API keys on your chosen exchange
-   - Enable futures/derivatives trading
-   - Save keys securely
+- Start with `--dry-run`, then testnet, then mainnet with the smallest size
+  that clears the $10 notional minimum.
+- The loss limit is per session (since process start). Restarting the bot
+  resets the baseline equity.
+- The bot manages a single symbol per process; run one process per market.
+- Never commit `.env` or `config.json` (both are git-ignored).
 
-3. **Configure the Bot**
-   - Use the GUI wizard or edit JSON manually
-   - Choose a strategy profile
-   - Set risk limits
+## License
 
-4. **Start Trading**
-   - Run the bot with provided launchers
-   - Monitor performance
-   - Adjust settings as needed
+MIT — see [LICENSE](LICENSE).
 
-## 📈 Monitoring
+## Disclaimer
 
-The bot provides real-time information:
-- Current market price and spread
-- Inventory and balance
-- Number of trades executed
-- Profit/Loss tracking
-- Risk metrics
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| "Module not found" | `pip install -r requirements.txt --upgrade` |
-| "API key invalid" | Check credentials and enable futures trading |
-| "Insufficient balance" | Add USDT to futures account |
-| "Symbol not found" | Verify symbol format (e.g., "ETH/USDT:USDT") |
-
-### Getting Help
-1. Check the [Complete Setup Guide](dist/COMPLETE_SETUP_GUIDE.md)
-2. Review `market_maker.log` for errors
-3. Test with small amounts first
-4. Use testnet if available
-
-## 🤝 Contributing
-
-We welcome contributions! Please feel free to submit issues and pull requests.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](dist/LICENSE) file for details.
-
-## ⚠️ Disclaimer
-
-This software is for educational purposes only. Cryptocurrency trading involves substantial risk of loss. The authors are not responsible for any financial losses incurred through the use of this software. Always trade responsibly and never invest more than you can afford to lose.
-
----
-
-<div align="center">
-  
-  **© 2025 Roboquant - Professional Cryptocurrency Trading Solutions**
-  
-  [Website](https://roboquant.ai) • [Documentation](dist/COMPLETE_SETUP_GUIDE.md) • [Support](mailto:support@roboquant.ai)
-  
-  *Made with ❤️ for the crypto trading community*
-  
-</div>
+This software is provided for educational purposes, without warranty of any
+kind. Trading cryptocurrency derivatives involves substantial risk of loss.
+You are solely responsible for any funds you put at risk.

@@ -1,0 +1,36 @@
+{
+  "exchange": {
+    "testnet": true,
+    "_comment": "Credentials come from environment variables HL_WALLET_ADDRESS and HL_PRIVATE_KEY (see .env.example). Never put keys in this file."
+  },
+
+  "trading": {
+    "symbol": "ETH/USDC:USDC",
+    "leverage": 3,
+    "order_size": 0.01,
+    "_comment": "order_size is in base units (ETH here) per quote. order_size * price must exceed Hyperliquid's $10 minimum notional."
+  },
+
+  "strategy": {
+    "gamma": 0.1,
+    "k": 1.0,
+    "horizon_seconds": 60,
+    "vol_half_life_seconds": 120,
+    "warmup_seconds": 60,
+    "min_spread_bps": 2.0,
+    "max_spread_bps": 100.0,
+    "update_interval_seconds": 1.0,
+    "requote_tolerance_frac": 0.25,
+    "min_requote_seconds": 5.0,
+    "_comment": "gamma and k are in 1/USD (see hyperliquid_mm/strategy.py for the units convention). Higher gamma = wider spread and stronger inventory aversion. min_requote_seconds limits cancel/replace churn, which Hyperliquid meters per address."
+  },
+
+  "risk": {
+    "max_inventory_usd": 200,
+    "session_loss_limit_usd": 25,
+    "flatten_on_exit": false,
+    "position_refresh_seconds": 10,
+    "open_orders_refresh_seconds": 5,
+    "_comment": "At max_inventory_usd the bot stops adding and quotes reduce-only on the unwind side. If session equity drops by session_loss_limit_usd, the bot flattens the position and halts."
+  }
+}

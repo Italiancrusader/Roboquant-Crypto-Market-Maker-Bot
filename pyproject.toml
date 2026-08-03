@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyperliquid-mm"
+version = "1.0.0"
+description = "Avellaneda-Stoikov market maker for Hyperliquid perpetuals"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [{ name = "Roboquant" }]
+keywords = ["market-making", "hyperliquid", "avellaneda-stoikov", "crypto", "trading-bot"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+    "ccxt>=4.5.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pyinstaller>=6.0"]
+
+[project.scripts]
+hyperliquid-mm = "run_bot:main"
+hyperliquid-mm-gui = "hyperliquid_mm.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot"
+Issues = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot/issues"
+
+[tool.setuptools]
+packages = ["hyperliquid_mm"]
+py-modules = ["run_bot", "run_gui"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

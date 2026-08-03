@@ -1,0 +1,82 @@
+name: Build executables
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pytest
+      - run: python -m pytest tests/ -v
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: hyperliquid-mm-linux
+          - os: macos-latest
+            artifact: hyperliquid-mm-macos
+          - os: windows-latest
+            artifact: hyperliquid-mm-windows.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller --onefile --name hyperliquid-mm --distpath binaries run_bot.py
+      - name: Smoke test CLI binary on this OS
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then BIN=./binaries/hyperliquid-mm.exe; else BIN=./binaries/hyperliquid-mm; fi
+          "$BIN" --help
+          "$BIN" | grep "created one with safe defaults"   # first-run config scaffolding
+          test -f binaries/config.json && rm binaries/config.json
+      - name: Build GUI app
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            pyinstaller --windowed --name HyperliquidMM --icon assets/icon.icns --distpath binaries run_gui.py
+            rm -rf binaries/HyperliquidMM
+            (cd binaries && zip -qr HyperliquidMM-macos.zip HyperliquidMM.app && rm -rf HyperliquidMM.app)
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            pyinstaller --onefile --windowed --name HyperliquidMM --icon assets/icon.ico --distpath binaries run_gui.py
+            mv binaries/HyperliquidMM.exe binaries/HyperliquidMM-windows.exe
+          fi
+      - name: Rename per platform
+        shell: bash
+        run: |
+          cd binaries
+          if [ -f hyperliquid-mm.exe ]; then mv hyperliquid-mm.exe "${{ matrix.artifact }}"; else mv hyperliquid-mm "${{ matrix.artifact }}"; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            binaries/${{ matrix.artifact }}
+            binaries/HyperliquidMM-*
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: binaries
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: binaries/*
+          generate_release_notes: true
