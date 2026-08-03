@@ -144,11 +144,14 @@ class BotGui:
             row=0, column=0, columnspan=2, sticky="w", pady=(0, 2))
         ttk.Label(
             left, foreground="gray", wraplength=230, justify="left",
-            text="1. Apply preset   2. Scan markets & pick one\n"
-                 "3. Save credentials   4. Start bot",
+            text="Quick start: Auto-setup, save credentials, Start bot.\n"
+                 "Or use the manual buttons below.",
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 6))
 
         r = 2
+        self.auto_btn = ttk.Button(left, text="⚡  Auto-setup (scan + best market)",
+                                   command=self._auto_setup)
+        self.auto_btn.grid(row=r, column=0, columnspan=2, sticky="we", pady=(0, 6)); r += 1
         ttk.Button(left, text="Apply Chop-Harvester preset",
                    command=self._apply_preset).grid(
             row=r, column=0, columnspan=2, sticky="we", pady=(0, 2)); r += 1
@@ -296,10 +299,16 @@ class BotGui:
             "Review, Save settings, then Start.")
 
     # ------------------------------------------------------- market scan
-    def _scan_markets(self) -> None:
+    def _auto_setup(self) -> None:
+        """One click: preset + market scan + apply the best-ranked market."""
+        self._apply_preset()
+        self._scan_markets(auto_apply=True)
+
+    def _scan_markets(self, auto_apply: bool = False) -> None:
         """Walk-forward market selection, in-app: backtest the preset on the
         top-volume markets and let the user pick from the ranked results."""
         self.scan_btn.config(state="disabled", text="Scanning… see log")
+        self.auto_btn.config(state="disabled")
         log = logging.getLogger(__name__)
 
         def scan() -> None:
@@ -356,8 +365,20 @@ class BotGui:
             def done() -> None:
                 self.scan_btn.config(state="normal",
                                      text="🔎  Scan markets (2–4 min)")
-                if results:
-                    self._show_scan_results(results)
+                self.auto_btn.config(state="normal")
+                if not results:
+                    return
+                if auto_apply:
+                    pnl, coin, price, fills, dd, vlm = results[0]
+                    self.symbol_var.set(f"{coin}/USDC:USDC")
+                    self._apply_preset(price=price)
+                    self._save_config()
+                    log.info(
+                        "AUTO-SETUP DONE: configured for %s "
+                        "(best of %d markets, $%+.2f over 18d). "
+                        "Check credentials, then press Start bot.",
+                        coin, len(results), pnl)
+                self._show_scan_results(results)
             try:
                 self.root.after(0, done)
             except tk.TclError:
@@ -387,6 +408,9 @@ class BotGui:
                 f"${vlm / 1e6:.1f}M"))
             by_iid[iid] = (coin, price)
         tree.pack(fill="both", expand=True, padx=10)
+        first = tree.get_children()
+        if first:
+            tree.selection_set(first[0])
 
         def apply(_event=None) -> None:
             sel = tree.selection()
