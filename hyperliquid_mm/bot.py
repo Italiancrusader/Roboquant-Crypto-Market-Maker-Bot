@@ -280,7 +280,6 @@ class MarketMakerBot:
             if have is not None and have.id not in open_ids:
                 logger.info("%s order %s no longer open — filled or cancelled", side, have.id)
                 self.resting[side] = None
-                self.session_fills += 1
                 self._force_position_refresh = True
                 vanished += 1
 
@@ -324,6 +323,9 @@ class MarketMakerBot:
         delta = self.position.size_base - previous
         if abs(delta) > 1e-12:
             self._pair_vanish_streak = 0  # real fills move the position
+            # Count fills from position changes, not from vanished orders —
+            # an order can vanish because we cancelled it during a requote.
+            self.session_fills += 1
             logger.info(
                 "Position change: %+.6f -> now %+.6f %s",
                 delta, self.position.size_base, self.cfg.symbol.split("/")[0],

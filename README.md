@@ -130,9 +130,9 @@ defaults).
 | `strategy.min/max_spread_bps` | `2 / 100` | Guard band on the total spread; clamping is logged. |
 | `strategy.requote_tolerance_frac` | `0.25` | Fraction of the half-spread the quote may drift before cancel/replace. |
 | `strategy.min_requote_seconds` | `5` | Per-side floor between replacements (protects queue position and action budget). |
-| `risk.max_inventory_usd` | `200` | Inventory cap (see table above). |
-| `risk.session_loss_limit_usd` | `25` | Flatten-and-halt threshold. |
-| `risk.flatten_on_exit` | `false` | Also market-close the position on any shutdown. |
+| `risk.max_inventory_usd` | `50` | Inventory cap (see table above). |
+| `risk.session_loss_limit_usd` | `5` | Flatten-and-halt threshold. |
+| `risk.flatten_on_exit` | `true` | Market-close the position on shutdown (costs a taker fee, guarantees no exposure left behind). |
 
 ## Repo layout
 
@@ -164,9 +164,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 - Start with `--dry-run`, then testnet, then mainnet with the smallest size
   that clears the $10 notional minimum.
-- **Mainnet collateral**: USDC in your Spot balance does not back perp
-  orders — transfer it to Perps in the Hyperliquid app first. The bot
-  refuses to start against an account with $0 perp equity.
+- **Mainnet collateral**: on unified accounts spot USDC backs perp orders
+  automatically; on classic accounts transfer USDC to Perps in the
+  Hyperliquid app first. The bot refuses to start when it can see no
+  usable equity at all.
 - **API wallets**: `HL_WALLET_ADDRESS` must be your *account* address, not
   the API wallet's own address (the key signs, the account is watched and
   traded). The bot detects this mix-up at startup and tells you the right
