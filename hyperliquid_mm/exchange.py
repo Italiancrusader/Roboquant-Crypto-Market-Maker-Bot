@@ -105,6 +105,26 @@ class HyperliquidClient:
     # ------------------------------------------------------------------
     # account state
     # ------------------------------------------------------------------
+    def check_wallet_role(self) -> Optional[str]:
+        """Return the master account address if the configured wallet address
+        is actually an agent/API wallet, else None.
+
+        Trading through an agent key works, but if HL_WALLET_ADDRESS points at
+        the agent instead of the master, every info query (orders, position,
+        equity) reads the wrong account: the bot goes blind to its own orders
+        and re-places them forever. Callers should refuse to trade in that case.
+        """
+        try:
+            role = self.exchange.publicPostInfo(
+                {"type": "userRole", "user": self.cfg.wallet_address.lower()}
+            )
+        except ccxt.BaseError as e:
+            logger.warning("Could not verify wallet role (continuing): %s", e)
+            return None
+        if role.get("role") == "agent":
+            return role.get("data", {}).get("user")
+        return None
+
     def set_leverage(self) -> None:
         if self.dry_run:
             logger.info("[dry-run] would set leverage to %dx", self.cfg.leverage)

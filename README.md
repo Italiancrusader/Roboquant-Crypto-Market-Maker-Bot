@@ -164,6 +164,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 - Start with `--dry-run`, then testnet, then mainnet with the smallest size
   that clears the $10 notional minimum.
+- **Mainnet collateral**: USDC in your Spot balance does not back perp
+  orders — transfer it to Perps in the Hyperliquid app first. The bot
+  refuses to start against an account with $0 perp equity.
+- **API wallets**: `HL_WALLET_ADDRESS` must be your *account* address, not
+  the API wallet's own address (the key signs, the account is watched and
+  traded). The bot detects this mix-up at startup and tells you the right
+  address.
 - The loss limit is per session (since process start). Restarting the bot
   resets the baseline equity.
 - The bot manages a single symbol per process; run one process per market.

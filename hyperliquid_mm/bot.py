@@ -57,6 +57,7 @@ class MarketMakerBot:
         self.session_fills = 0
         self._last_position_refresh = 0.0
         self._last_orders_refresh = 0.0
+        self._pair_vanish_streak = 0
         self._last_status = 0.0
         self._force_position_refresh = True
         self.halted = False
@@ -74,6 +75,29 @@ class MarketMakerBot:
             cfg.max_inventory_usd, cfg.session_loss_limit_usd,
             " | DRY RUN (no orders will be placed)" if self.dry_run else "",
         )
+        if not self.dry_run:
+            # Refuse to trade blind: HL_WALLET_ADDRESS must be the master
+            # account, not the agent/API wallet doing the signing.
+            master = self.client.check_wallet_role()
+            if master:
+                self._halt(
+                    f"HL_WALLET_ADDRESS points at an agent/API wallet. Set it to "
+                    f"your account address instead: {master} (the API wallet key "
+                    f"stays the same)."
+                )
+                return
+            # Refuse to trade with no collateral (also catches watching the
+            # wrong, empty account).
+            equity = self.client.fetch_equity()
+            if equity <= 0:
+                self._halt(
+                    f"Account {cfg.wallet_address} shows $0 perp equity. Fund it "
+                    f"first — on Hyperliquid, USDC in the Spot balance does NOT "
+                    f"back perp orders; transfer it to Perps in the app "
+                    f"(Portfolio -> Perps/Spot transfer)."
+                )
+                return
+
         self.client.set_leverage()
         # Clean slate: remove any orders left over from a previous session.
         if not self.dry_run:
@@ -250,6 +274,7 @@ class MarketMakerBot:
         open_orders = self.client.fetch_open_orders()
         open_ids = {o.id for o in open_orders}
 
+        vanished = 0
         for side in ("buy", "sell"):
             have = self.resting[side]
             if have is not None and have.id not in open_ids:
@@ -257,6 +282,19 @@ class MarketMakerBot:
                 self.resting[side] = None
                 self.session_fills += 1
                 self._force_position_refresh = True
+                vanished += 1
+
+        # Both sides disappearing repeatedly while the position never moves
+        # means our orders live on an account we are not watching (e.g. agent
+        # key for a different master). Halt instead of stacking orders forever.
+        if vanished == 2:
+            self._pair_vanish_streak += 1
+            if self._pair_vanish_streak >= 3:
+                self._halt(
+                    "orders keep disappearing without any position change — "
+                    "the account being watched is probably not the account "
+                    "being traded. Check HL_WALLET_ADDRESS."
+                )
 
         # Defensive: cancel anything on the book we are not tracking
         # (e.g. leftovers after a reconnect).
@@ -285,6 +323,7 @@ class MarketMakerBot:
             logger.info("Session starting equity: $%.2f", self.equity_start)
         delta = self.position.size_base - previous
         if abs(delta) > 1e-12:
+            self._pair_vanish_streak = 0  # real fills move the position
             logger.info(
                 "Position change: %+.6f -> now %+.6f %s",
                 delta, self.position.size_base, self.cfg.symbol.split("/")[0],

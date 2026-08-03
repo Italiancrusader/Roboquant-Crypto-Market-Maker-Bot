@@ -147,7 +147,7 @@ class BotGui:
         # or config.json. The key field is write-only: it is never pre-filled.
         ttk.Label(left, text="Credentials", font=("", 13, "bold")).grid(
             row=r, column=0, columnspan=2, sticky="w", pady=(12, 4)); r += 1
-        ttk.Label(left, text="Wallet address").grid(row=r, column=0, sticky="w")
+        ttk.Label(left, text="Account address").grid(row=r, column=0, sticky="w")
         self.addr_var = tk.StringVar()
         ttk.Entry(left, textvariable=self.addr_var, width=16).grid(
             row=r, column=1, sticky="w", padx=(8, 0)); r += 1
