@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
 from .config import BotConfig
-from .strategy import EwmaVolatility, StrategyParams, compute_quotes
+from .strategy import EwmaVolatility, StrategyParams, compute_quotes, trend_zscore
 
 # Hyperliquid default fee tier
 MAKER_FEE = 0.00015
@@ -213,6 +213,7 @@ def run_backtest(
 
     pending_bid: Optional[Tuple[float, float]] = None  # (price, size)
     pending_ask: Optional[Tuple[float, float]] = None
+    closes: List[Tuple[int, float]] = []  # (ts_ms, close) for the trend gate
 
     for ts_ms, _o, high, low, close, _v in candles:
         # 1) resolve last bar's quotes against this bar (no look-ahead)
@@ -246,8 +247,22 @@ def run_backtest(
 
         # 3) update volatility and compute next bar's quotes
         vol.update(close, ts_ms / 1000.0)
+        closes.append((ts_ms, close))
         if not vol.is_warm(cfg.warmup_seconds):
             continue
+
+        # trend gate (mirrors the live bot): stand down to unwind-only when
+        # the lookback move exceeds trend_gate_z diffusion units
+        gated = False
+        if cfg.trend_gate_hours > 0:
+            window_ms = cfg.trend_gate_hours * 3_600_000
+            while closes and closes[0][0] < ts_ms - window_ms:
+                closes.pop(0)
+            if closes and ts_ms - closes[0][0] >= window_ms * 0.5:
+                then_ts, then_close = closes[0]
+                z = trend_zscore(close, then_close, (ts_ms - then_ts) / 1000.0,
+                                 vol.sigma_per_sqrt_second)
+                gated = z > cfg.trend_gate_z
 
         q = compute_quotes(close, inv / cfg.order_size,
                            vol.variance_per_second, params)
@@ -258,6 +273,13 @@ def run_backtest(
         inv_usd = inv * close
         long_capped = inv_usd >= cfg.max_inventory_usd
         short_capped = inv_usd <= -cfg.max_inventory_usd
+        if gated:
+            long_capped = True
+            short_capped = True
+            if inv > 0:
+                short_capped = False  # reduce-only sell allowed
+            elif inv < 0:
+                long_capped = False  # reduce-only buy allowed
         if not long_capped:
             size = min(cfg.order_size, abs(inv)) if short_capped else cfg.order_size
             if size > 0 and size * bid_px >= 10.0:

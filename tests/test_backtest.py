@@ -213,6 +213,38 @@ class TestL1Parsing:
         assert _parse_snapshot_line('{"raw": {"data": {"levels": [[]]}}}') is None
 
 
+class TestTrendGateInBacktest:
+    def trend_bars(self):
+        bars = flat_bars(120)
+        price = 2000.0
+        for i in range(240):
+            nxt = price - 1.0
+            bars.append(bar(120 + i, price, price, nxt - 1.0, nxt))
+            price = nxt
+        return bars
+
+    def test_gate_stops_stacking_in_trend(self):
+        """With the inventory skew weakened, an ungated bot stacks fills all
+        the way down a trend; the gate must cut both fills and loss hard."""
+        kw = dict(session_loss_limit_usd=1e9, max_inventory_usd=1e9, gamma=0.001)
+        ungated = run_backtest(make_cfg(**kw), self.trend_bars())
+        gated = run_backtest(
+            make_cfg(**kw, trend_gate_hours=1.0, trend_gate_z=1.5),
+            self.trend_bars())
+        assert len(gated.fills) < len(ungated.fills) / 3
+        assert gated.pnl > ungated.pnl / 3  # both negative; gated far less so
+
+    def test_gate_inactive_in_flat_market(self):
+        """A flat market must trade identically with and without the gate."""
+        kw = dict(session_loss_limit_usd=1e9)
+        plain = run_backtest(make_cfg(**kw), flat_bars(200))
+        gated = run_backtest(
+            make_cfg(**kw, trend_gate_hours=1.0, trend_gate_z=1.5),
+            flat_bars(200))
+        assert plain.pnl == pytest.approx(gated.pnl)
+        assert len(plain.fills) == len(gated.fills)
+
+
 class TestMetrics:
     def test_summary_runs_and_sharpe_finite(self):
         result = run_backtest(make_cfg(), flat_bars(120), initial_capital=1000)
