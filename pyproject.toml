@@ -31,7 +31,8 @@ hyperliquid-mm = "run_bot:main"
 hyperliquid-mm-gui = "hyperliquid_mm.gui:main"
 
 [project.urls]
-Homepage = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot"
+Homepage = "https://roboquant.dev"
+Repository = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot"
 Issues = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot/issues"
 
 [tool.setuptools]

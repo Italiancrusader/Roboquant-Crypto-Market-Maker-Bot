@@ -4,6 +4,9 @@ A market making bot for **Hyperliquid perpetuals** implementing the
 **Avellaneda-Stoikov (2008)** model with consistent units, exchange-sourced
 position tracking, and real risk controls.
 
+Built and maintained by [Roboquant](https://roboquant.dev) — algorithmic
+trading tools and education.
+
 > ⚠️ Market making with leverage can lose money quickly. Run `--dry-run`
 > first, then testnet, and only then mainnet with small size. See
 > [Safety](#safety).
@@ -146,7 +149,6 @@ tests/test_strategy.py   unit tests — run: python -m pytest tests/
 assets/                  app icons (Roboquant logo)
 build_executable.sh      local binary/app build (PyInstaller)
 .github/workflows/       CI: tests + Linux/macOS/Windows executables
-legacy/                  ⚠️ previous-generation bots — deprecated, do not run
 ```
 
 ## Development
@@ -157,15 +159,6 @@ python -m pytest tests/ -v
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Legacy code
-
-Everything under [`legacy/`](legacy/) is the previous generation of this
-repo. An audit found critical defects (broken A-S units that made the strategy
-a constant-spread quoter, ~10-300× double-counted inventory, advertised risk
-controls that were never implemented, and a hard crash on import with current
-ccxt). It is kept for reference only — **do not trade with it**. Details in
-[legacy/README.md](legacy/README.md).
 
 ## Safety
 
@@ -179,6 +172,12 @@ ccxt). It is kept for reference only — **do not trade with it**. Details in
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Links
+
+- [Roboquant](https://roboquant.dev)
+- [Hyperliquid app](https://app.hyperliquid.xyz) · [testnet](https://app.hyperliquid-testnet.xyz)
+- Avellaneda & Stoikov (2008), *High-frequency trading in a limit order book*
 
 ## Disclaimer
 
