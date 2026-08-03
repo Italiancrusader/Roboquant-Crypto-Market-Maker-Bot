@@ -29,6 +29,7 @@ dev = ["pytest>=7.0", "pyinstaller>=6.0"]
 [project.scripts]
 hyperliquid-mm = "run_bot:main"
 hyperliquid-mm-gui = "hyperliquid_mm.gui:main"
+hyperliquid-mm-backtest = "run_backtest:main"
 
 [project.urls]
 Homepage = "https://roboquant.dev"
@@ -37,7 +38,7 @@ Issues = "https://github.com/Italiancrusader/Roboquant-Crypto-Market-Maker-Bot/i
 
 [tool.setuptools]
 packages = ["hyperliquid_mm"]
-py-modules = ["run_bot", "run_gui"]
+py-modules = ["run_bot", "run_gui", "run_backtest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

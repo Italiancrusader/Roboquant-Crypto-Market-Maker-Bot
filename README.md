@@ -139,6 +139,7 @@ defaults).
 ```
 run_bot.py               CLI entry point (--config, --dry-run)
 run_gui.py               desktop control panel entry point
+run_backtest.py          backtest on historical candles (same config.json)
 hyperliquid_mm/
   strategy.py            A-S math + volatility estimator (pure, unit-tested)
   exchange.py            ccxt Hyperliquid wrapper (all I/O isolated here)
@@ -150,6 +151,31 @@ assets/                  app icons (Roboquant logo)
 build_executable.sh      local binary/app build (PyInstaller)
 .github/workflows/       CI: tests + Linux/macOS/Windows executables
 ```
+
+## Backtesting
+
+Replay the exact production quoting code (`strategy.py`) over historical
+Hyperliquid candles, with the live bot's fill/risk mechanics (inventory cap,
+reduce-only unwind, session loss limit, end-of-run flatten):
+
+```bash
+python run_backtest.py --days 7                          # uses config.json
+python run_backtest.py --days 30 --symbol BTC/USDC:USDC --timeframe 5m
+python run_backtest.py --days 7 --csv equity.csv         # export equity curve
+```
+
+No credentials needed (candle data is public). The fill model is deliberately
+**conservative**: quotes computed on bar *t* only fill against bar *t+1*
+(no look-ahead), and only on a strict price cross — a touch never fills,
+because queue position can't be known from candles. Maker/taker fees use
+Hyperliquid's default tier. Metric conventions (Sharpe, max drawdown) follow
+Roboquant's backtest-engine for comparability.
+
+Treat results as **indicative, not predictive**: candle-level simulation
+approximates the live 1-second loop. Expect symmetric quoting without an
+alpha signal to lose small amounts in trending weeks — that is the known
+limitation of pure Avellaneda-Stoikov, and the backtester exists precisely
+so you can measure it before risking funds.
 
 ## Development
 
