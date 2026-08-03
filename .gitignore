@@ -1,0 +1,12 @@
+config.json
+.env
+*.log
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+binaries/
+*.spec
+build/
+.DS_Store

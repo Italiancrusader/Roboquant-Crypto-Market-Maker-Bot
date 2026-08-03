@@ -1,0 +1,44 @@
+Universal Market Making Bot - Distribution Package
+=================================================
+
+Core Files:
+-----------
+✓ market_maker_bot.py     - Main bot application
+✓ config_wizard.py        - GUI configuration tool
+✓ config.example.json     - Configuration template
+✓ requirements.txt        - Python dependencies
+
+Documentation:
+--------------
+✓ COMPLETE_SETUP_GUIDE.md - Complete setup guide for all platforms
+✓ setup_guide.html       - Interactive HTML setup guide
+✓ LICENSE                - MIT License
+
+Windows Files:
+--------------
+✓ start_bot.bat          - Windows bot launcher
+✓ configure_bot.bat      - Windows config launcher
+
+Linux/Mac Files:
+----------------
+✓ start_bot.sh           - Linux/Mac bot launcher
+✓ setup_aws.sh           - AWS/VPS setup script
+
+Generated Files (created when you run the bot):
+-----------------------------------------------
+○ config.json            - Your bot configuration
+○ market_maker.log       - Bot activity log
+○ venv/                  - Python virtual environment
+
+Total Size: ~50 KB (before dependencies)
+
+After Setup:
+- Python dependencies will add ~50-100 MB
+- Log files will grow over time
+- No other large files are created
+
+Minimum Requirements:
+- Python 3.8+
+- 100 MB free disk space
+- Internet connection
+- Exchange API keys
